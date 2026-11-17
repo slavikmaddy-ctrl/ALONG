@@ -3370,3 +3370,61 @@ body.is-home .stage:has(.stage-map:not([hidden])) .hero-shade {
     padding: 8px 6px;
   }
 }
+
+/* ===== Главная: видео становится фоном всей страницы ===== */
+body.is-home main.page-enter {
+  animation: homeEnter 0.4s ease-out both;
+}
+
+@keyframes homeEnter {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+body.is-home .stage {
+  background: transparent;
+}
+
+body.is-home .hero-video {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  height: 100svh;
+  object-fit: cover;
+  object-position: center 42%;
+  z-index: -2;
+}
+
+body.is-home::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(140% 100% at 50% 0%, rgba(8, 10, 14, 0.08) 0%, rgba(8, 10, 14, 0.30) 62%, rgba(8, 10, 14, 0.44) 100%),
+    linear-gradient(180deg, rgba(8, 10, 14, 0.30) 0%, rgba(8, 10, 14, 0.16) 26%, rgba(8, 10, 14, 0.36) 100%);
+}
+
+body.is-home .band {
+  background-color: rgba(12, 13, 17, 0.5);
+}
+
+body.is-home .band-photo,
+body.is-home .band-road {
+  background: rgba(12, 13, 17, 0.46);
+}
+
+body.is-home .site-footer {
+  background: rgba(10, 11, 14, 0.66);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.is-home {
+    background: #100e0c url("images/road.jpg") center / cover fixed no-repeat;
+  }
+  body.is-home::before {
+    content: none;
+  }
+}
