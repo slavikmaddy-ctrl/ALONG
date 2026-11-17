@@ -190,7 +190,8 @@ python scripts/reset_demo.py --admin-password "<новый>" --user-password "<�
 - **Open redirect:** `safe_next()` пропускает только локальные пути.
 - **Ошибки:** кастомные страницы 400/404/500 без трассировок.
 - **Файлы:** загружаемых файлов нет; статика отдаётся только из `static/`
-  (включая `static/images`).
+  (включая `static/images`). Источники и лицензии фотографий —
+  `app/static/images/CREDITS.md` (CC0 / Public Domain).
 
 ## Резервное копирование и восстановление
 
