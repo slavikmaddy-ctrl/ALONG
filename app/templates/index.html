@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+﻿{% extends "base.html" %}
 {% block title %}ALONG — Главная{% endblock %}
 {% block body_class %}is-home{% endblock %}
 {% block head_extra %}
@@ -25,7 +25,7 @@
     <form id="ride-search" class="search-form" action="{{ url_for('trips') }}" method="get">
       <label class="field suggest">
         <span>Откуда</span>
-        <input id="from-input" name="from" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="from-list">
+        <input id="from-input" name="from" autocomplete="off" placeholder="Город или адрес" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="from-list">
         <input id="from-lat" name="from_lat" type="hidden">
         <input id="from-lon" name="from_lon" type="hidden">
         <ul id="from-list" class="suggest-list" hidden role="listbox"></ul>
@@ -35,7 +35,7 @@
       </label>
       <label class="field suggest">
         <span>Куда</span>
-        <input id="to-input" name="to" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="to-list">
+        <input id="to-input" name="to" autocomplete="off" placeholder="Куда едем" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="to-list">
         <input id="to-lat" name="to_lat" type="hidden">
         <input id="to-lon" name="to_lon" type="hidden">
         <ul id="to-list" class="suggest-list" hidden role="listbox"></ul>
@@ -55,7 +55,7 @@
         <span>Дата</span>
         <input id="date-input" name="date" type="hidden" value="">
         <small id="date-error" hidden></small>
-        <div class="along-cal" data-calendar data-input="date-input" data-endpoint="/api/trip-days" data-from="from-input" data-to="to-input" data-kind="kind-input" data-days-id="home-days" data-blank="Когда есть поездки"></div>
+        <div class="along-cal" data-calendar data-input="date-input" data-endpoint="/api/trip-days" data-from="from-input" data-to="to-input" data-kind="kind-input" data-days-id="home-days" data-blank="Любая дата"></div>
         <script type="application/json" id="home-days">{{ trip_days|tojson }}</script>
       </div>
       <button class="btn btn-primary" type="submit">Найти</button>
@@ -179,5 +179,5 @@
 {% endblock %}
 {% block scripts %}
 <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
-<script src="{{ url_for('static', filename='home.js') }}?v=home7"></script>
+<script src="{{ url_for('static', filename='home.js') }}?v=home9"></script>
 {% endblock %}

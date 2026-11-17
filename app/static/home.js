@@ -818,7 +818,7 @@
       if (geoNote) {
         geoNote.hidden = false;
         geoNote.textContent = error && error.code === 1
-          ? "Доступ к геолокации выключен. Включите его в настройках браузера или введите адрес вручную."
+          ? "Геолокация недоступна. Введите адрес вручную."
           : "Координаты не пришли. Введите адрес вручную.";
       }
       refreshServices();
@@ -863,16 +863,20 @@
   if (retry) retry.addEventListener("click", askGeo);
   var searchForm = document.getElementById("ride-search");
   if (searchForm) {
-    searchForm.addEventListener("submit", function () {
+    searchForm.addEventListener("submit", function (event) {
       var latEl = document.getElementById("from-lat");
       var lonEl = document.getElementById("from-lon");
       var lat = latEl ? latEl.value.trim() : "";
       var lon = lonEl ? lonEl.value.trim() : "";
       if (fromInput.value === HERE && (!lat || !lon)) {
-        fromInput.value = "";
-        fromInput.dataset.picked = "";
-        if (latEl) latEl.value = "";
-        if (lonEl) lonEl.value = "";
+        event.preventDefault();
+        fromInput.focus();
+        fromInput.select();
+        if (geoNote) {
+          geoNote.hidden = false;
+          geoNote.textContent = "Не удалось определить местоположение. Введите город вручную.";
+        }
+        return;
       }
       ["from-lat", "from-lon", "to-lat", "to-lon"].forEach(function (id) {
         var field = document.getElementById(id);

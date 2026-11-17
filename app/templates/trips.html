@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+﻿{% extends "base.html" %}
 {% block title %}ALONG — Поездки{% endblock %}
 {% block main %}
 <section class="page-hero page-hero--road">
@@ -21,8 +21,17 @@
         <p class="lede">Открытые поездки. Бронь без входа не создаётся.</p>
       {% endif %}
       <form class="filters filters--search" method="get" action="{{ url_for('trips') }}" style="margin-top: 14px;">
-        <input id="filter-from" type="hidden" name="from" value="{{ origin }}">
-        <input id="filter-to" type="hidden" name="to" value="{{ dest }}">
+        <div class="filters__route">
+          <label class="field">
+            <span>Откуда</span>
+            <input id="filter-from" name="from" value="{{ origin }}" list="cities" autocomplete="off" placeholder="Город или адрес">
+          </label>
+          <label class="field">
+            <span>Куда</span>
+            <input id="filter-to" name="to" value="{{ dest }}" list="cities" autocomplete="off" placeholder="Город или адрес">
+          </label>
+        </div>
+        <datalist id="cities">{% for city in cities %}<option value="{{ city.name }}">{% endfor %}</datalist>
         <input id="filter-from-lat" type="hidden" name="from_lat" value="{{ request.args.get('from_lat') or '' }}">
         <input id="filter-from-lon" type="hidden" name="from_lon" value="{{ request.args.get('from_lon') or '' }}">
         <input id="filter-to-lat" type="hidden" name="to_lat" value="{{ request.args.get('to_lat') or '' }}">
@@ -39,7 +48,7 @@
         <div class="field along-cal-field">
           <span>Дата</span>
           <input id="trip-date" type="hidden" name="date" value="{{ date }}" data-trip-date>
-          <div class="along-cal" data-calendar data-input="trip-date" data-endpoint="/api/trip-days" data-from="filter-from" data-to="filter-to" data-kind="kind-input" data-from-lat="filter-from-lat" data-from-lon="filter-from-lon" data-days-id="trip-days" data-submit="feed" data-blank="Когда есть поездки"></div>
+          <div class="along-cal" data-calendar data-input="trip-date" data-endpoint="/api/trip-days" data-from="filter-from" data-to="filter-to" data-kind="kind-input" data-from-lat="filter-from-lat" data-from-lon="filter-from-lon" data-days-id="trip-days" data-submit="feed" data-blank="Любая дата"></div>
           <script type="application/json" id="trip-days">{{ trip_days|tojson }}</script>
         </div>
         <label class="field"><span>Мест не меньше</span>
@@ -123,7 +132,7 @@
       {% set badge, left, past = trip_meta(trip) %}
       <article class="trip-row" data-date="{{ trip.depart_at[:10] }}">
         <img class="trip-photo" src="{{ url_for('media', name=trip.photo) }}" alt="{{ trip.driver_name }}">
-        <div class="when"><strong>{{ trip.depart_at[11:16] }}</strong><span>{{ trip.depart_at[:10] }}</span></div>
+        <div class="when"><strong>{{ trip.depart_at[11:16] }}</strong><span>{{ trip.depart_at|fmt_day }}</span></div>
         <div class="trip-main">
           <h2><a class="text-link" href="{{ url_for('trip_page', trip_id=trip.id) }}">{{ trip.origin }} → {{ trip.destination }}</a></h2>
           <p>{{ trip.driver_name }} · {{ trip.car or 'машина указана в профиле' }} · свободно {{ left }}</p>

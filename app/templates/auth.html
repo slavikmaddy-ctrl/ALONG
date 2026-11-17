@@ -33,11 +33,11 @@
           <input type="hidden" name="next" value="{{ nxt }}">
           <label class="field {{ 'is-error' if errors.name else '' }}"><span>Имя</span><input name="name" value="{{ form.name }}" placeholder="Как к вам обращаться?" maxlength="200" autocomplete="name" required>{% if errors.name %}<small>{{ errors.name }}</small>{% endif %}</label>
           <label class="field {{ 'is-error' if errors.email else '' }}"><span>Почта</span><input name="email" value="{{ form.email }}" type="email" autocomplete="email" placeholder="name@example.com" required>{% if errors.email %}<small>{{ errors.email }}</small>{% endif %}</label>
-          <label class="field {{ 'is-error' if errors.password else '' }}"><span>Пароль</span><input name="password" type="password" autocomplete="new-password" placeholder="••••••••" minlength="8" required>{% if errors.password %}<small>{{ errors.password }}</small>{% endif %}</label>
+          <label class="field {{ 'is-error' if errors.password else '' }}"><span>Пароль</span><input name="password" type="password" autocomplete="new-password" placeholder="••••••••" minlength="8" required>{% if errors.password %}<small>{{ errors.password }}</small>{% endif %}<small>Не короче 8 символов.</small></label>
           <label class="field {{ 'is-error' if errors.city else '' }}"><span>Город</span>
-            <input name="city" value="{{ form.city }}" list="cities" autocomplete="address-level2" required>
+            <input name="city" value="{{ form.city }}" list="cities" autocomplete="address-level2" placeholder="Начните вводить город" required>
             <datalist id="cities">{% for city in cities %}<option value="{{ city.name }}">{% endfor %}</datalist>
-            {% if errors.city %}<small>{{ errors.city }}</small>{% endif %}
+            {% if errors.city %}<small>{{ errors.city }}</small>{% else %}<small>Выберите город из списка.</small>{% endif %}
           </label>
           <fieldset class="role-switch">
             <legend>Как вы поедете</legend>

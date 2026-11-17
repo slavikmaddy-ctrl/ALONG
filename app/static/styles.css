@@ -3474,3 +3474,115 @@ body.is-home .site-footer {
   align-items: flex-end;
   margin-bottom: 16px;
 }
+
+/* ===== Поиск: видимые поля, подсказки и мобильное меню ===== */
+.filters__route {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+@media (max-width: 560px) {
+  .filters__route { grid-template-columns: 1fr; }
+}
+
+.stage .search-form .field input:not([type="hidden"]) {
+  padding: 0 12px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.06);
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.stage .search-form .field input:not([type="hidden"]):hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.stage .search-form .field input:not([type="hidden"]):focus,
+.stage .search-form .field select:focus,
+.filters .field input:focus,
+.filters .field select:focus {
+  outline: 2px solid rgba(255, 255, 255, 0.78);
+  outline-offset: 1px;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.stage .search-form .field input:not([type="hidden"]):focus {
+  border-color: rgba(255, 255, 255, 0.55);
+}
+
+@media (max-width: 700px) {
+  .site-header .site-nav,
+  .js .site-header .site-nav,
+  .js .site-header .site-nav.is-open {
+    flex-flow: row nowrap;
+    justify-content: flex-start;
+    width: auto;
+    max-width: calc(100vw - 16px);
+    padding: 6px;
+    gap: 2px;
+    border-radius: 22px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .site-header .site-nav::-webkit-scrollbar { display: none; }
+
+  .site-header .site-nav a,
+  .js .site-header .site-nav a,
+  .site-header .site-nav a:not(.btn) {
+    flex: 0 0 auto;
+    min-height: 40px;
+    padding: 8px 14px;
+    font-size: 0.95rem;
+  }
+
+  .site-header .site-nav form { flex: 0 0 auto; }
+}
+
+.stage .search-form > .field {
+  align-content: start;
+}
+
+@media (max-width: 700px) {
+  .site-header .site-nav a,
+  .js .site-header .site-nav a,
+  .site-header .site-nav a:not(.btn) {
+    min-height: 38px;
+    padding: 7px 11px;
+    font-size: 0.85rem;
+  }
+
+  .site-header .site-nav,
+  .js .site-header .site-nav,
+  .js .site-header .site-nav.is-open {
+    padding: 5px;
+    gap: 0;
+  }
+}
+
+.stage .search-form .field select {
+  padding: 0 32px 0 12px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 10px;
+  background-color: rgba(255, 255, 255, 0.06);
+}
+
+.stage .search-form .along-cal .day-pick__btn {
+  height: 36px;
+  min-height: 36px;
+  padding: 0 12px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
+  font-size: 1rem;
+}
+
+.stage .search-form .along-cal .day-pick__btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}

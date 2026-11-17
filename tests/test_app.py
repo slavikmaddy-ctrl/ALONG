@@ -629,3 +629,33 @@ def test_complaint_status_filter(admin_client):
     html = admin_client.get("/admin/complaints?status=done").get_data(as_text=True)
     assert "Описание поправили" in html
     assert "В описании маршрут короче" not in html
+
+def test_trips_page_has_route_inputs(client):
+    html = client.get("/trips").get_data(as_text=True)
+    assert 'id="filter-from"' in html
+    assert 'id="filter-to"' in html
+    assert "Город или адрес" in html
+    assert 'id="filter-from" type="hidden"' not in html
+
+
+def test_unknown_city_message_names_the_city(client):
+    html = client.get("/trips?from=Тверь&to=Минск").get_data(as_text=True)
+    assert "Города «Тверь» нет в списке" in html
+
+
+def test_trip_card_date_is_human_readable(client):
+    html = client.get("/trips").get_data(as_text=True)
+    spans = re.findall(r'class="when"><strong>[^<]+</strong><span>([^<]+)</span>', html)
+    assert spans
+    assert all(not re.fullmatch(r"\d{4}-\d{2}-\d{2}", value) for value in spans)
+
+
+def test_footer_copyright_is_not_duplicated(client):
+    html = client.get("/").get_data(as_text=True)
+    assert html.count("Все права защищены") == 1
+
+
+def test_404_page_has_distinct_actions(client):
+    html = client.get("/nope").get_data(as_text=True)
+    assert html.count(">На главную<") == 1
+    assert ">Смотреть поездки<" in html

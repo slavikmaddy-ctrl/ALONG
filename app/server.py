@@ -223,6 +223,17 @@ def fmt_dt(value):
     return f"{moment.day} {MONTHS[moment.month - 1]}, {moment.strftime('%H:%M')}"
 
 
+@app.template_filter("fmt_day")
+def fmt_day(value):
+    """Дата без времени: «18 ноября», а для другого года — «18 ноября 2027»."""
+    if not value:
+        return ""
+    moment = datetime.fromisoformat(value)
+    if moment.year == datetime.now().year:
+        return f"{moment.day} {MONTHS[moment.month - 1]}"
+    return f"{moment.day} {MONTHS[moment.month - 1]} {moment.year}"
+
+
 def fmt_ts(value):
     try:
         moment = datetime.fromtimestamp(float(value))
@@ -1245,6 +1256,7 @@ def inject():
         "me": user,
         "csrf": ensure_csrf(),
         "fmt_dt": fmt_dt,
+        "fmt_day": fmt_day,
         "fmt_ts": fmt_ts,
         "trip_meta": trip_meta,
         "here_label": HERE,
@@ -1633,9 +1645,9 @@ def trips():
             here_point = None
     place_error = None
     if origin and origin != HERE and origin not in CITY_BY_NAME:
-        place_error = "Выберите адрес из списка"
+        place_error = "Города «%s» нет в списке. Начните вводить и выберите из подсказок." % origin[:40]
     if dest and dest not in CITY_BY_NAME:
-        place_error = "Выберите адрес из списка"
+        place_error = "Города «%s» нет в списке. Начните вводить и выберите из подсказок." % dest[:40]
     if origin == HERE and not here_point:
         place_error = "Не удалось определить местоположение. Выберите город из списка."
     if origin and dest and origin == dest:
@@ -1719,7 +1731,7 @@ def trips():
         show_offer=show_offer, quote=quote, quote_km=quote_km,
         quote_cars=quote_cars or 0, quote_error=quote_error,
         quote_requested=quote_requested, quote_link=quote_link,
-        rate=KIND_RATE.get(kind),
+        rate=KIND_RATE.get(kind), cities=CITIES,
     )
 
 

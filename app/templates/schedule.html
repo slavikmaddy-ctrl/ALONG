@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+﻿{% extends "base.html" %}
 {% block title %}ALONG — Расписание{% endblock %}
 {% block main %}
 <section class="page-hero page-hero--station schedule-hero">
@@ -24,7 +24,7 @@
         <div class="field along-cal-field">
           <span>Дата</span>
           <input id="schedule-date" type="hidden" name="date" value="{{ date }}">
-          <div class="along-cal" data-calendar data-input="schedule-date" data-endpoint="/api/schedule-days" data-from="sched-from" data-to="sched-to" data-mode="{{ mode }}" data-days-id="schedule-days" data-submit="1" data-blank="Когда есть рейсы"></div>
+          <div class="along-cal" data-calendar data-input="schedule-date" data-endpoint="/api/schedule-days" data-from="sched-from" data-to="sched-to" data-mode="{{ mode }}" data-days-id="schedule-days" data-submit="1" data-blank="Любая дата"></div>
           <script type="application/json" id="schedule-days">{{ schedule_days|tojson }}</script>
         </div>
         <button class="btn btn-primary" type="submit">Показать</button>
