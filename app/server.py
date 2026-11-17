@@ -12,6 +12,8 @@ import os
 import re
 import secrets
 import sqlite3
+import threading
+import time
 from datetime import datetime, timedelta
 from functools import wraps
 from urllib.error import HTTPError, URLError
@@ -248,6 +250,9 @@ def resolve_place(name, lat, lon, allow_here=False):
         return {"name": HERE, "lat": lat_f, "lon": lon_f}, None
     city = CITY_BY_NAME.get(cleaned)
     if not city:
+        head = cleaned.split(",")[0].strip()
+        city = CITY_BY_NAME.get(head)
+    if not city:
         return None, "Выберите адрес из списка"
     return city, None
 
@@ -360,6 +365,41 @@ def haversine(lat1, lon1, lat2, lon2):
     dlmb = math.radians(lon2 - lon1)
     a = math.sin(dphi / 2) ** 2 + math.cos(p1) * math.cos(p2) * math.sin(dlmb / 2) ** 2
     return 2 * radius * math.asin(math.sqrt(a))
+
+
+_CACHE = {}
+_CACHE_LOCK = threading.Lock()
+
+
+def cache_get(key):
+    with _CACHE_LOCK:
+        item = _CACHE.get(key)
+        if not item:
+            return None
+        expires, value = item
+        if expires < time.time():
+            _CACHE.pop(key, None)
+            return None
+        return value
+
+
+def cache_set(key, value, ttl=600):
+    with _CACHE_LOCK:
+        if len(_CACHE) > 500:
+            _CACHE.clear()
+        _CACHE[key] = (time.time() + ttl, value)
+
+
+def nearest_city(lat, lon, limit_km=25):
+    best = None
+    for city in CITIES:
+        try:
+            distance = haversine(lat, lon, city["lat"], city["lon"])
+        except (TypeError, ValueError):
+            continue
+        if distance <= limit_km and (best is None or distance < best[0]):
+            best = (distance, city)
+    return best[1] if best else None
 
 
 def init_db():
@@ -1015,10 +1055,14 @@ NOMINATIM_COUNTRIES = "ru,by,kz,am,kg,uz,tj,az"
 
 
 def nominatim_places(query):
+    cache_key = "geo:" + query.casefold()
+    cached = cache_get(cache_key)
+    if cached is not None:
+        return cached
     params = urlencode({
         "format": "json",
         "q": query,
-        "limit": 5,
+        "limit": 8,
         "accept-language": "ru",
         "countrycodes": NOMINATIM_COUNTRIES,
     })
@@ -1039,7 +1083,8 @@ def nominatim_places(query):
     if not isinstance(data, list):
         return []
     places = []
-    for item in data[:5]:
+    seen = set()
+    for item in data[:8]:
         if not isinstance(item, dict):
             continue
         name = item.get("display_name")
@@ -1050,7 +1095,19 @@ def nominatim_places(query):
             continue
         if not name or not (-90 <= lat <= 90 and -180 <= lon <= 180):
             continue
-        places.append({"display_name": str(name), "lat": lat, "lon": lon})
+        city = nearest_city(lat, lon)
+        if not city:
+            head = str(name).split(",")[0].strip()
+            city = CITY_BY_NAME.get(head)
+        if not city or city["name"] in seen:
+            continue
+        seen.add(city["name"])
+        places.append({
+            "display_name": city["name"],
+            "lat": city["lat"],
+            "lon": city["lon"],
+        })
+    cache_set(cache_key, places)
     return places
 
 
@@ -1101,7 +1158,7 @@ def clean_kind(value):
     return ""
 
 
-def trip_day_counts(origin="", dest="", kind=""):
+def trip_day_counts(origin="", dest="", kind="", from_lat=None, from_lon=None):
     """Даты открытых поездок и число выездов. Чужие поля в ответ не попадают."""
     origin = (origin or "").strip()
     dest = (dest or "").strip()
@@ -1110,6 +1167,17 @@ def trip_day_counts(origin="", dest="", kind=""):
         return []
     if dest and dest not in CITY_BY_NAME:
         return []
+    here_point = None
+    if origin == HERE:
+        try:
+            lat_f = float(from_lat)
+            lon_f = float(from_lon)
+            if -90 <= lat_f <= 90 and -180 <= lon_f <= 180:
+                here_point = (lat_f, lon_f)
+        except (TypeError, ValueError):
+            here_point = None
+        if not here_point:
+            return []
     sql = """
         SELECT origin, destination, substr(depart_at, 1, 10) AS day
         FROM trips
@@ -1130,6 +1198,10 @@ def trip_day_counts(origin="", dest="", kind=""):
     for row in rows:
         if kind and trip_kind(row["origin"], row["destination"]) != kind:
             continue
+        if here_point:
+            city = CITY_BY_NAME.get(row["origin"])
+            if not city or haversine(here_point[0], here_point[1], city["lat"], city["lon"]) > 50:
+                continue
         day = row["day"]
         if not day:
             continue
@@ -1192,6 +1264,10 @@ def place_coords(name, lat, lon):
 
 
 def driving_km(lat1, lon1, lat2, lon2):
+    cache_key = "osrm:{:.4f},{:.4f};{:.4f},{:.4f}".format(lat1, lon1, lat2, lon2)
+    cached = cache_get(cache_key)
+    if cached is not None:
+        return cached
     path = "{:.6f},{:.6f};{:.6f},{:.6f}".format(lon1, lat1, lon2, lat2)
     url = "https://router.project-osrm.org/route/v1/driving/" + path + "?overview=false"
     upstream = Request(
@@ -1212,7 +1288,9 @@ def driving_km(lat1, lon1, lat2, lon2):
         return None
     if meters <= 0:
         return None
-    return meters / 1000.0
+    km = meters / 1000.0
+    cache_set(cache_key, km)
+    return km
 
 
 def count_free_cars(origin, dest):
@@ -1296,6 +1374,8 @@ def api_trip_days():
             request.args.get("from") or "",
             request.args.get("to") or "",
             request.args.get("kind") or "",
+            request.args.get("from_lat"),
+            request.args.get("from_lon"),
         )
     except Exception:
         payload = []
@@ -1325,11 +1405,24 @@ def trips():
         day, date_error = parse_ride_date(requested)
     seats = request.args.get("seats") or ""
     price = request.args.get("price") or ""
+    from_lat = request.args.get("from_lat")
+    from_lon = request.args.get("from_lon")
+    here_point = None
+    if origin == HERE:
+        try:
+            lat_f = float(from_lat)
+            lon_f = float(from_lon)
+            if -90 <= lat_f <= 90 and -180 <= lon_f <= 180:
+                here_point = (lat_f, lon_f)
+        except (TypeError, ValueError):
+            here_point = None
     place_error = None
     if origin and origin != HERE and origin not in CITY_BY_NAME:
         place_error = "Выберите адрес из списка"
     if dest and dest not in CITY_BY_NAME:
         place_error = "Выберите адрес из списка"
+    if origin == HERE and not here_point:
+        place_error = "Не удалось определить местоположение. Выберите город из списка."
     if origin and dest and origin == dest:
         place_error = "Укажите разные точки"
     sql = """
@@ -1352,6 +1445,13 @@ def trips():
         place_error = place_error or "Поиск не выполнился. Повторите."
     if kind:
         found = [row for row in found if trip_kind(row["origin"], row["destination"]) == kind]
+    if origin == HERE and here_point:
+        near = []
+        for row in found:
+            city = CITY_BY_NAME.get(row["origin"])
+            if city and haversine(here_point[0], here_point[1], city["lat"], city["lon"]) <= 50:
+                near.append(row)
+        found = near
     known_days = {}
     for row in found:
         stamp = (row["depart_at"] or "")[:10]
@@ -1360,10 +1460,7 @@ def trips():
     trip_days = [{"date": stamp, "count": known_days[stamp]} for stamp in sorted(known_days)]
     date_value = ""
     if day and not date_error:
-        if day.isoformat() not in known_days:
-            day = None
-        else:
-            date_value = day.isoformat()
+        date_value = day.isoformat()
     base_rows = [] if date_error else list(found)
     if day:
         base_rows = [row for row in base_rows if (row["depart_at"] or "")[:10] == day.isoformat()]
@@ -1379,18 +1476,26 @@ def trips():
         filtered = True
     failed = request.args.get("failed") == "1"
     route_ready = origin in CITY_BY_NAME and dest in CITY_BY_NAME and origin != dest
-    show_offer = route_ready and not place_error and not date_error and not failed and not base_rows
+    show_offer = route_ready and not place_error and not date_error and not failed and not base_rows and not day
+    quote_requested = request.args.get("quote") == "1"
     quote = quote_km = quote_cars = None
     quote_error = None
-    if show_offer:
-        try:
-            quote, quote_km, quote_cars, quote_error = recommend_price(
-                origin, dest, kind,
-                request.args.get("from_lat"), request.args.get("from_lon"),
-                request.args.get("to_lat"), request.args.get("to_lon"),
-            )
-        except Exception:
-            quote_error = "Не удалось получить расстояние: сервис маршрута не ответил. Укажите свою цену."
+    if show_offer and quote_requested:
+        if not kind:
+            quote_error = "Выберите тип поездки, чтобы посчитать рекомендацию. Свою цену можно ввести вручную."
+        else:
+            try:
+                quote, quote_km, quote_cars, quote_error = recommend_price(
+                    origin, dest, kind, from_lat, from_lon,
+                    request.args.get("to_lat"), request.args.get("to_lon"),
+                )
+            except Exception:
+                quote_error = "Не удалось получить расстояние: сервис маршрута не ответил. Укажите свою цену."
+            if quote is None and not quote_error:
+                quote_error = "Расстояние временно недоступно. Укажите цену вручную."
+    quote_args = {key: value for key, value in request.args.items()}
+    quote_args["quote"] = "1"
+    quote_link = url_for("trips", **quote_args)
     return render_template(
         "trips.html", rows=rows, origin=origin, dest=dest, kind=kind,
         date=date_value, seats=seats, price=price,
@@ -1398,6 +1503,7 @@ def trips():
         failed=failed, had_base=bool(base_rows), trip_days=trip_days,
         show_offer=show_offer, quote=quote, quote_km=quote_km,
         quote_cars=quote_cars or 0, quote_error=quote_error,
+        quote_requested=quote_requested, quote_link=quote_link,
         rate=KIND_RATE.get(kind),
     )
 
@@ -1410,6 +1516,9 @@ def create_offer():
         return redirect(url_for("login", next=nxt, expired=1))
     if not me:
         return redirect(url_for("login", next=nxt))
+    if not me["verified"]:
+        flash("Подтвердите почту, чтобы предложить цену.")
+        return redirect(url_for("me_page"))
     check_csrf()
     origin = (request.form.get("origin") or "").strip()
     dest = (request.form.get("destination") or "").strip()
@@ -1542,13 +1651,35 @@ def trip_page(trip_id):
     me = current_user()
     is_driver = bool(me and me["id"] == row["driver_id"])
     passenger_any = None
+    last_booking = None
     if me and not is_driver:
         passenger_any = db().execute(
             "SELECT id FROM bookings WHERE trip_id = ? AND passenger_id = ? LIMIT 1",
             (trip_id, me["id"]),
         ).fetchone()
+        last_booking = db().execute(
+            """
+            SELECT * FROM bookings
+            WHERE trip_id = ? AND passenger_id = ?
+            ORDER BY id DESC LIMIT 1
+            """,
+            (trip_id, me["id"]),
+        ).fetchone()
+    hide_note = None
+    if row["status"] == "hidden":
+        hide_note = row["hide_reason"] or "Без пояснения."
     if closed and not is_driver and not (me and me["role"] == "admin"):
-        if not (row["status"] == "cancelled" and passenger_any):
+        allowed = bool(row["status"] == "cancelled" and passenger_any)
+        if row["status"] == "hidden" and me:
+            seat = db().execute(
+                """
+                SELECT id FROM bookings
+                WHERE trip_id = ? AND passenger_id = ? AND status IN ('plan', 'confirmed')
+                """,
+                (trip_id, me["id"]),
+            ).fetchone()
+            allowed = bool(seat)
+        if not allowed:
             return render_template("unavailable.html", kind="trip")
     booking = None
     if me and not is_driver:
@@ -1577,6 +1708,9 @@ def trip_page(trip_id):
         if not me:
             return redirect(url_for("login", next=request.path))
         action = request.form.get("action") or ""
+        if not me["verified"] and action in ("request", "clarify", "plan_ok", "confirm", "complaint"):
+            flash("Подтвердите почту, чтобы продолжить.")
+            return redirect(url_for("me_page"))
         if action == "request":
             errors = apply_request(row, me, booking, left)
         elif action == "clarify" and booking and booking["passenger_id"] == me["id"]:
@@ -1621,6 +1755,15 @@ def trip_page(trip_id):
             """,
             (trip_id, me["id"]),
         ).fetchone() if me and not is_driver else booking
+        if me and not is_driver:
+            last_booking = db().execute(
+                """
+                SELECT * FROM bookings
+                WHERE trip_id = ? AND passenger_id = ?
+                ORDER BY id DESC LIMIT 1
+                """,
+                (trip_id, me["id"]),
+            ).fetchone()
         row = db().execute(
             """
             SELECT t.*, u.name AS driver_name, u.photo, u.rating, u.trips_count, u.car, u.about, u.status AS driver_status
@@ -1646,6 +1789,7 @@ def trip_page(trip_id):
         is_driver=is_driver, driver_bookings=driver_bookings,
         can_review=can_review, review_targets=review_targets,
         chat_with_driver=bool(passenger_any),
+        last_booking=last_booking, hide_note=hide_note,
     )
 
 
@@ -1700,6 +1844,9 @@ def trip_review(trip_id):
     me = current_user()
     if not me:
         abort(401)
+    if not me["verified"]:
+        flash("Подтвердите почту, чтобы оставить отзыв.")
+        return redirect(url_for("me_page"))
     check_csrf()
     try:
         rating = int(request.form.get("rating") or "")
@@ -1797,15 +1944,19 @@ def apply_request(row, me, booking, left):
     fresh_left = row["seats_total"] - row["seats_taken"]
     if seats < 1 or seats > fresh_left or left < 1:
         return {"seats": "Столько мест уже нет" if fresh_left else "Мест не осталось"}
-    db().execute(
-        """
-        INSERT INTO bookings
-        (trip_id, passenger_id, seats, status, passenger_ok, driver_ok, created_at)
-        VALUES (?, ?, ?, 'clarify', 0, 0, ?)
-        """,
-        (row["id"], me["id"], seats, now_ts()),
-    )
-    db().commit()
+    try:
+        db().execute(
+            """
+            INSERT INTO bookings
+            (trip_id, passenger_id, seats, status, passenger_ok, driver_ok, created_at)
+            VALUES (?, ?, ?, 'clarify', 0, 0, ?)
+            """,
+            (row["id"], me["id"], seats, now_ts()),
+        )
+        db().commit()
+    except sqlite3.IntegrityError:
+        db().rollback()
+        return {"form": "Заявка уже отправлена. Обновите страницу."}
     flash("Заявка отправлена. Сейчас шаг «Уточнение».")
     return {}
 
@@ -1968,10 +2119,7 @@ def schedule():
     known = {item["date"] for item in schedule_days}
     date_value = ""
     if day and not date_error:
-        if day.isoformat() not in known:
-            day = None
-        else:
-            date_value = day.isoformat()
+        date_value = day.isoformat()
     rows = []
     if not date_error and not failed and day:
         sql = "SELECT * FROM schedules WHERE mode = ? AND substr(depart_at, 1, 10) = ?"
@@ -2015,21 +2163,39 @@ def route_page():
     km = hours = None
     built = False
     if origin and dest and not error:
-        km = round(haversine(origin["lat"], origin["lon"], dest["lat"], dest["lon"]))
+        straight = haversine(origin["lat"], origin["lon"], dest["lat"], dest["lon"])
+        road = driving_km(origin["lat"], origin["lon"], dest["lat"], dest["lon"])
+        km = round(road if road else straight * 1.25)
         hours = max(1, round(km / 70))
         built = False
     trips_near = []
     if origin and dest and not error:
-        trips_near = db().execute(
-            """
-            SELECT t.*, u.name AS driver_name FROM trips t
-            JOIN users u ON u.id = t.driver_id
-            WHERE t.status = 'open' AND t.depart_at >= ?
-              AND ((t.origin = ? AND t.destination = ?) OR t.origin = ? OR t.destination = ?)
-            ORDER BY t.depart_at LIMIT 5
-            """,
-            (datetime.now().strftime("%Y-%m-%dT%H:%M"), origin["name"], dest["name"], origin["name"], dest["name"]),
-        ).fetchall()
+        try:
+            candidates = db().execute(
+                """
+                SELECT t.*, u.name AS driver_name FROM trips t
+                JOIN users u ON u.id = t.driver_id
+                WHERE t.status = 'open' AND t.depart_at >= ?
+                ORDER BY t.depart_at LIMIT 50
+                """,
+                (datetime.now().strftime("%Y-%m-%dT%H:%M"),),
+            ).fetchall()
+        except sqlite3.Error:
+            candidates = []
+
+        def near(place, city_name):
+            if place["name"] == city_name:
+                return True
+            city = CITY_BY_NAME.get(city_name)
+            if not city or place["name"] != HERE:
+                return False
+            return haversine(place["lat"], place["lon"], city["lat"], city["lon"]) <= 50
+
+        for item in candidates:
+            if near(origin, item["origin"]) or near(dest, item["destination"]):
+                trips_near.append(item)
+            if len(trips_near) >= 5:
+                break
     return render_template(
         "route.html", origin=origin, dest=dest, error=error, km=km, hours=hours,
         built=built, trips=trips_near,
@@ -2237,7 +2403,7 @@ def login():
                     if user["role"] == "admin" and posted_next in ("", "/"):
                         target = url_for("admin_home")
                     response = redirect(target)
-                    response.set_cookie("along_sid", token, httponly=True, samesite="Lax", max_age=SESSION_SECONDS)
+                    response.set_cookie("along_sid", token, httponly=True, samesite="Lax", secure=SECURE_COOKIES, max_age=SESSION_SECONDS)
                     return response
     return render_template("auth.html", mode="login", errors=errors, email=email, nxt=nxt, expired=expired)
 
@@ -2387,7 +2553,7 @@ def verify_token(token):
     session.pop("pending_verify", None)
     target = safe_next(request.args.get("next"))
     response = redirect(target)
-    response.set_cookie("along_sid", sid, httponly=True, samesite="Lax", max_age=SESSION_SECONDS)
+    response.set_cookie("along_sid", sid, httponly=True, samesite="Lax", secure=SECURE_COOKIES, max_age=SESSION_SECONDS)
     return response
 
 
@@ -2399,7 +2565,7 @@ def logout():
         db().execute("DELETE FROM sessions WHERE token = ?", (hash_token(token),))
         db().commit()
     response = redirect(url_for("home"))
-    response.delete_cookie("along_sid")
+    response.delete_cookie("along_sid", httponly=True, samesite="Lax", secure=SECURE_COOKIES)
     return response
 
 
@@ -2509,10 +2675,15 @@ def admin_trip_edit(trip_id):
 
 def admin_trip_form(trip_id):
     trip = None
+    confirmed_seats = 0
     if trip_id:
         trip = db().execute("SELECT * FROM trips WHERE id = ?", (trip_id,)).fetchone()
         if not trip:
             abort(404)
+        confirmed_seats = db().execute(
+            "SELECT COALESCE(SUM(seats), 0) AS n FROM bookings WHERE trip_id = ? AND status = 'confirmed'",
+            (trip_id,),
+        ).fetchone()["n"]
     drivers = db().execute(
         "SELECT id, name, status FROM users WHERE status = 'active' ORDER BY name"
     ).fetchall()
@@ -2597,8 +2768,19 @@ def admin_trip_form(trip_id):
                     errors["time"] = "Укажите будущее время"
             if trip and datetime.fromisoformat(trip["depart_at"]) < datetime.now() and trip["status"] == "open":
                 errors["form"] = "Поездка завершена. Правка маршрута недоступна."
+            changed_plan = False
+            reconcile = request.form.get("reconcile") == "1"
+            if trip and depart and not errors:
+                changed_plan = (
+                    trip["depart_at"] != depart.strftime("%Y-%m-%dT%H:%M")
+                    or trip["pickup"] != form["pickup"].strip()
+                )
+            if changed_plan and confirmed_seats and not reconcile:
+                errors["form"] = (
+                    "В поездке {} подтверждённых мест. Отметьте «Пересогласовать брони», "
+                    "чтобы вернуть их на шаг «Уточнение», иначе брони останутся как есть.".format(confirmed_seats)
+                )
             if not errors and origin and dest and depart and driver:
-                changed_plan = trip and (trip["depart_at"] != depart.strftime("%Y-%m-%dT%H:%M") or trip["pickup"] != form["pickup"].strip())
                 if trip:
                     db().execute(
                         """
@@ -2610,7 +2792,7 @@ def admin_trip_form(trip_id):
                          dest["lat"], dest["lon"], depart.strftime("%Y-%m-%dT%H:%M"), price, seats,
                          form["pickup"].strip(), trip["id"]),
                     )
-                    if changed_plan:
+                    if changed_plan and reconcile:
                         db().execute(
                             """
                             UPDATE bookings SET status='clarify', passenger_ok=0, driver_ok=0
@@ -2619,7 +2801,12 @@ def admin_trip_form(trip_id):
                             (trip["id"],),
                         )
                         db().execute(
-                            "UPDATE trips SET seats_taken = 0 WHERE id = ?",
+                            "UPDATE trips SET seats_taken = MAX(seats_taken - ?, 0) WHERE id = ?",
+                            (confirmed_seats, trip["id"]),
+                        )
+                    elif changed_plan:
+                        db().execute(
+                            "UPDATE bookings SET passenger_ok=0, driver_ok=0 WHERE trip_id=? AND status='plan'",
                             (trip["id"],),
                         )
                 else:
@@ -2642,7 +2829,7 @@ def admin_trip_form(trip_id):
                 db().commit()
                 flash("Поездка сохранена.")
                 return redirect(url_for("admin_trips"))
-    return render_template("admin_trip_form.html", trip=trip, form=form, errors=errors, drivers=drivers, cities=CITIES)
+    return render_template("admin_trip_form.html", trip=trip, form=form, errors=errors, drivers=drivers, cities=CITIES, confirmed_seats=confirmed_seats)
 
 
 @app.route("/admin/users")
@@ -3417,6 +3604,9 @@ def chat_page(admin_view):
 @app.route("/chat", methods=["GET", "POST"])
 @require_user()
 def chat():
+    if request.method == "POST" and not current_user()["verified"]:
+        flash("Подтвердите почту, чтобы писать в чат.")
+        return redirect(url_for("me_page"))
     try:
         return chat_page(False)
     except sqlite3.Error:

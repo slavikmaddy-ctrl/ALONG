@@ -269,8 +269,9 @@
 
     function paint() {
       var stamps = liveStamps();
-      if (input.value && !days[input.value]) {
-        input.value = "";
+      if (input.value && stamps.indexOf(input.value) < 0) {
+        stamps.push(input.value);
+        stamps.sort();
       }
       var label = input.value ? formatTripDay(input.value) : blank;
       value.textContent = label;
@@ -349,6 +350,8 @@
       var fromEl = document.getElementById(root.getAttribute("data-from") || "");
       var toEl = document.getElementById(root.getAttribute("data-to") || "");
       var kindEl = document.getElementById(root.getAttribute("data-kind") || "");
+      var fromLatEl = document.getElementById(root.getAttribute("data-from-lat") || "");
+      var fromLonEl = document.getElementById(root.getAttribute("data-from-lon") || "");
       var mode = root.getAttribute("data-mode") || "";
       if (fromEl && fromEl.value.trim()) {
         params.set("from", fromEl.value.trim());
@@ -358,6 +361,12 @@
       }
       if (kindEl && kindEl.value) {
         params.set("kind", kindEl.value);
+      }
+      if (fromLatEl && fromLatEl.value.trim()) {
+        params.set("from_lat", fromLatEl.value.trim());
+      }
+      if (fromLonEl && fromLonEl.value.trim()) {
+        params.set("from_lon", fromLonEl.value.trim());
       }
       if (mode) {
         params.set("mode", mode);
@@ -371,9 +380,6 @@
         })
         .then(function (payload) {
           days = dayMap(payload);
-          if (input.value && !days[input.value]) {
-            input.value = "";
-          }
           paint();
         })
         .catch(function () {

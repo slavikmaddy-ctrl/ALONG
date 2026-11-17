@@ -23,6 +23,10 @@
     {% if errors.driver %}<small>{{ errors.driver }}</small>{% endif %}
   </label>
   <datalist id="cities">{% for city in cities %}<option value="{{ city.name }}">{% endfor %}</datalist>
+  {% if trip and confirmed_seats %}
+  <p class="muted">У поездки {{ confirmed_seats }} подтверждённых мест.</p>
+  <label class="check-line"><input type="checkbox" name="reconcile" value="1" {% if request.form.get('reconcile') == '1' %}checked{% endif %}> <span>Пересогласовать брони при смене времени или точки</span></label>
+  {% endif %}
   <button class="btn btn-primary" name="action" value="save" type="submit">Сохранить</button>
 </form>
 {% if trip %}

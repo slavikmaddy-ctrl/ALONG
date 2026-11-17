@@ -48,6 +48,15 @@
         <li class="{{ 'is-done' if step > 4 else '' }}"><span class="step-index">4</span><span class="step-label">Подтверждение</span></li>
       </ol>
       {% if errors.form %}<p class="note-bad">{{ errors.form }}</p>{% endif %}
+      {% if hide_note %}<p class="note-bad">Поездка скрыта администратором: {{ hide_note }}</p>{% endif %}
+      {% if last_booking and last_booking.status == 'rejected' %}
+        <p class="note-bad">Водитель отклонил заявку{% if last_booking.reject_reason %}: {{ last_booking.reject_reason }}{% endif %}. Можно отправить новую.</p>
+      {% elif last_booking and last_booking.status == 'cancelled' %}
+        <p class="note-bad">Вы отменили заявку. Можно отправить новую.</p>
+      {% endif %}
+      {% if me and not me.verified %}
+        <p class="note-bad">Почта не подтверждена. <a class="text-link" href="{{ url_for('verify_wait') }}">Подтвердите почту</a>, иначе заявка, отзыв и жалоба не отправятся.</p>
+      {% endif %}
       {% if not me %}
         <p style="margin-top: 12px;">Подтверждение доступно после входа. Заявка сейчас не создаётся.</p>
         <div class="empty-actions">

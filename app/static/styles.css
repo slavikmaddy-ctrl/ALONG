@@ -3428,3 +3428,17 @@ body.is-home .site-footer {
     content: none;
   }
 }
+
+/* Этап 1: пересогласование броней в админке */
+.check-line {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.check-line input {
+  width: auto;
+  margin-top: 2px;
+}

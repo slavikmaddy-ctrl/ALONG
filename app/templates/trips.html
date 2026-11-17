@@ -23,6 +23,10 @@
       <form class="filters filters--search" method="get" action="{{ url_for('trips') }}" style="margin-top: 14px;">
         <input id="filter-from" type="hidden" name="from" value="{{ origin }}">
         <input id="filter-to" type="hidden" name="to" value="{{ dest }}">
+        <input id="filter-from-lat" type="hidden" name="from_lat" value="{{ request.args.get('from_lat') or '' }}">
+        <input id="filter-from-lon" type="hidden" name="from_lon" value="{{ request.args.get('from_lon') or '' }}">
+        <input id="filter-to-lat" type="hidden" name="to_lat" value="{{ request.args.get('to_lat') or '' }}">
+        <input id="filter-to-lon" type="hidden" name="to_lon" value="{{ request.args.get('to_lon') or '' }}">
         <label class="field">
           <span>Тип поездки</span>
           <select id="kind-input" name="kind">
@@ -35,7 +39,7 @@
         <div class="field along-cal-field">
           <span>Дата</span>
           <input id="trip-date" type="hidden" name="date" value="{{ date }}" data-trip-date>
-          <div class="along-cal" data-calendar data-input="trip-date" data-endpoint="/api/trip-days" data-from="filter-from" data-to="filter-to" data-kind="kind-input" data-days-id="trip-days" data-submit="feed" data-blank="Когда есть поездки"></div>
+          <div class="along-cal" data-calendar data-input="trip-date" data-endpoint="/api/trip-days" data-from="filter-from" data-to="filter-to" data-kind="kind-input" data-from-lat="filter-from-lat" data-from-lon="filter-from-lon" data-days-id="trip-days" data-submit="feed" data-blank="Когда есть поездки"></div>
           <script type="application/json" id="trip-days">{{ trip_days|tojson }}</script>
         </div>
         <label class="field"><span>Мест не меньше</span>
@@ -76,6 +80,9 @@
           <div class="empty-actions">
             <a class="btn btn-primary" href="{{ url_for('new_trip', **{'from': origin, 'to': dest, 'date': date}) }}">Запланировать поездку</a>
             <a class="btn btn-ghost" href="{{ url_for('schedule', **{'from': origin, 'to': dest, 'date': date}) }}">Смотреть расписание</a>
+            {% if date %}
+            <a class="btn btn-ghost" href="{{ url_for('trips', **{'from': origin, 'to': dest, 'kind': kind}) }}">Показать все даты</a>
+            {% endif %}
           </div>
         {% endif %}
       </section>
@@ -88,6 +95,11 @@
           <p class="note-bad">{{ quote_error }}</p>
         {% elif quote is not none %}
           <p>Рекомендуемая цена {{ quote }} ₽. Около {{ rate }} ₽/км, {{ quote_km }} км, округление до 10 ₽. Свободных машин на маршруте: {{ quote_cars }}.{% if quote_cars >= 3 %} К рекомендации применена скидка 15%.{% endif %}</p>
+        {% elif show_offer and not quote_requested and kind %}
+          <p class="muted">Цену можно рассчитать по расстоянию и числу свободных машин. Это займёт пару секунд.</p>
+          <p><a class="btn btn-ghost" href="{{ quote_link }}">Рассчитать цену</a></p>
+        {% elif show_offer and not quote_requested %}
+          <p class="muted">Выберите тип поездки, чтобы посчитать рекомендацию. Свою цену можно ввести вручную.</p>
         {% endif %}
         <form class="filters" method="post" action="{{ url_for('create_offer') }}">
           <input type="hidden" name="csrf" value="{{ csrf }}">
