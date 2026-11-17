@@ -36,6 +36,33 @@ SESSION_SECONDS = 60 * 60 * 8
 HERE = "Моё местоположение"
 EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 REVIEW_TEXT_LIMIT = 1000
+STATUS_LABELS = {
+    "clarify": "уточнение",
+    "plan": "план",
+    "confirmed": "подтверждено",
+    "rejected": "отказ",
+    "cancelled": "отменено",
+    "open": "открыта",
+    "hidden": "скрыта",
+    "done": "разобрана",
+    "active": "активен",
+    "blocked": "заблокирован",
+    "pending": "на проверке",
+    "approved": "подтверждён",
+    "pending_resignation": "ждёт отказа",
+    "passenger": "пассажир",
+    "driver": "водитель",
+    "admin": "администратор",
+    "user": "пользователь",
+}
+FIELD_LIMITS = {
+    "meeting": 200,
+    "luggage": 200,
+    "comment": 500,
+    "reason": 500,
+    "staff_note": 500,
+    "complaint": 2000,
+}
 ENV_NAME = (os.environ.get("ALONG_ENV") or "dev").strip().lower()
 BASE_URL = (os.environ.get("ALONG_BASE_URL") or "").strip().rstrip("/")
 SECURE_COOKIES = os.environ.get("ALONG_SECURE_COOKIES") == "1" or ENV_NAME == "prod"
@@ -1156,16 +1183,73 @@ def chat_href(user_id, trip_id=None, admin=False):
     return url_for("admin_messages" if admin else "chat", **params)
 
 
+@app.template_filter("status_label")
+def status_label(value):
+    key = (value or "").strip().lower()
+    return STATUS_LABELS.get(key, value or "")
+
+
+COMPLAINT_LABELS = {"open": "на проверке", "done": "разобрана"}
+
+
+@app.template_filter("complaint_label")
+def complaint_label(value):
+    key = (value or "").strip().lower()
+    return COMPLAINT_LABELS.get(key, value or "")
+
+
+EMPTY_NOTIFICATIONS = {"clarify": 0, "unread": 0, "problems": 0, "total": 0}
+
+
+def notification_counts(user):
+    """Счётчики шапки: новые заявки водителю, непрочитанные сообщения, отказы и отмены."""
+    if not user or not getattr(g, "db", None):
+        return dict(EMPTY_NOTIFICATIONS)
+    moment = datetime.now().strftime("%Y-%m-%dT%H:%M")
+    counts = dict(EMPTY_NOTIFICATIONS)
+    try:
+        counts["clarify"] = db().execute(
+            """
+            SELECT COUNT(*) AS n
+            FROM bookings b JOIN trips t ON t.id = b.trip_id
+            WHERE t.driver_id = ? AND b.status = 'clarify'
+              AND t.status = 'open' AND t.depart_at >= ?
+            """,
+            (user["id"], moment),
+        ).fetchone()["n"]
+        counts["unread"] = db().execute(
+            "SELECT COUNT(*) AS n FROM messages WHERE receiver_id = ? AND is_read = 0",
+            (user["id"],),
+        ).fetchone()["n"]
+        counts["problems"] = db().execute(
+            """
+            SELECT COUNT(DISTINCT b.trip_id) AS n
+            FROM bookings b JOIN trips t ON t.id = b.trip_id
+            WHERE b.passenger_id = ?
+              AND (b.status = 'rejected' OR t.status = 'cancelled')
+              AND t.depart_at >= ?
+            """,
+            (user["id"], moment),
+        ).fetchone()["n"]
+    except sqlite3.Error:
+        log.warning("Не удалось посчитать уведомления для пользователя %s", user["id"])
+        return dict(EMPTY_NOTIFICATIONS)
+    counts["total"] = counts["unread"] + counts["clarify"] + counts["problems"]
+    return counts
+
+
 @app.context_processor
 def inject():
+    user = current_user()
     return {
-        "me": current_user(),
+        "me": user,
         "csrf": ensure_csrf(),
         "fmt_dt": fmt_dt,
         "fmt_ts": fmt_ts,
         "trip_meta": trip_meta,
         "here_label": HERE,
         "chat_href": chat_href,
+        "notifications": notification_counts(user),
     }
 
 
@@ -1666,6 +1750,19 @@ def create_offer():
     if offer_price < 50 or offer_price > 100000:
         flash("Укажите цену целым числом от 50 до 100000.")
         return redirect(nxt)
+    day_ago = (datetime.now() - timedelta(hours=24)).strftime("%Y-%m-%d %H:%M:%S")
+    duplicate = db().execute(
+        """
+        SELECT id FROM custom_offers
+        WHERE passenger_id = ? AND origin = ? AND destination = ?
+          AND offer_price = ? AND created_at > ?
+        LIMIT 1
+        """,
+        (me["id"], origin, dest, offer_price, day_ago),
+    ).fetchone()
+    if duplicate:
+        flash("Такое предложение уже отправлено. Повторно можно через сутки.")
+        return redirect(nxt)
     try:
         db().execute(
             """
@@ -1865,10 +1962,12 @@ def trip_page(trip_id):
             cancel_trip(row)
         elif action == "complaint" and me["id"] != row["driver_id"]:
             body = (request.form.get("body") or "").strip()
-            if rate_limit("complaint:" + str(me["id"]), 10, 3600):
-                errors["complaint"] = "Слишком много жалоб. Повторите через час."
+            if rate_limit("complaint:" + str(me["id"]), 3, 86400):
+                errors["complaint"] = "Не больше трёх жалоб в сутки. Повторите завтра."
             elif not body:
                 errors["complaint"] = "Заполните поле"
+            elif len(body) > FIELD_LIMITS["complaint"]:
+                errors["complaint"] = "Не больше 2000 символов"
             else:
                 db().execute(
                     """
@@ -2100,11 +2199,19 @@ def apply_request(row, me, booking, left):
 def apply_clarify(booking):
     phone = normalize_phone(request.form.get("phone"))
     meeting = (request.form.get("meeting") or "").strip()
+    luggage = (request.form.get("luggage") or "").strip()
+    comment = (request.form.get("comment") or "").strip()
     errors = {}
     if not phone:
         errors["phone"] = "Введите телефон в формате +7 и 10 цифр. Без номера водитель не подтвердит посадку."
     if not meeting:
         errors["meeting"] = "Заполните поле"
+    elif len(meeting) > FIELD_LIMITS["meeting"]:
+        errors["meeting"] = "Не больше 200 символов"
+    if len(luggage) > FIELD_LIMITS["luggage"]:
+        errors["luggage"] = "Не больше 200 символов"
+    if len(comment) > FIELD_LIMITS["comment"]:
+        errors["comment"] = "Не больше 500 символов"
     if errors:
         return errors
     db().execute(
@@ -2113,8 +2220,7 @@ def apply_clarify(booking):
         SET phone = ?, meeting = ?, luggage = ?, comment = ?, status = 'clarify'
         WHERE id = ? AND status = 'clarify'
         """,
-        (phone, meeting, (request.form.get("luggage") or "").strip(),
-         (request.form.get("comment") or "").strip(), booking["id"]),
+        (phone, meeting, luggage, comment, booking["id"]),
     )
     db().commit()
     flash("Уточнение сохранено. Ждём ответ водителя.")
@@ -2141,6 +2247,8 @@ def apply_reject(row):
     reason = (request.form.get("reason") or "").strip()
     if not reason:
         return {"reason": "Укажите причину"}
+    if len(reason) > FIELD_LIMITS["reason"]:
+        return {"reason": "Не больше 500 символов"}
     item = db().execute(
         "SELECT * FROM bookings WHERE id = ? AND trip_id = ? AND status IN ('clarify', 'plan')",
         (request.form.get("booking_id"), row["id"]),
@@ -2413,6 +2521,28 @@ def public_profile(user_id):
     )
 
 
+def offer_matches_trips(offer, trips):
+    """Предложение видно водителю, если совпадает маршрут или точки рядом (до 50 км)."""
+    for trip in trips:
+        if offer["origin"] == trip["origin"] and offer["destination"] == trip["destination"]:
+            return True
+        origin = CITY_BY_NAME.get(offer["origin"])
+        dest = CITY_BY_NAME.get(offer["destination"])
+        trip_origin = CITY_BY_NAME.get(trip["origin"])
+        trip_dest = CITY_BY_NAME.get(trip["destination"])
+        if not (origin and dest and trip_origin and trip_dest):
+            continue
+        close_origin = (offer["origin"] == trip["origin"] or haversine(
+            origin["lat"], origin["lon"], trip_origin["lat"], trip_origin["lon"]
+        ) <= 50)
+        close_dest = (offer["destination"] == trip["destination"] or haversine(
+            dest["lat"], dest["lon"], trip_dest["lat"], trip_dest["lon"]
+        ) <= 50)
+        if close_origin and close_dest:
+            return True
+    return False
+
+
 @app.route("/me", methods=["GET", "POST"])
 @require_user()
 def me_page():
@@ -2464,15 +2594,24 @@ def me_page():
     try:
         if (g.me["driver_status"] or "") == "approved":
             offers = db().execute(
-                "SELECT id, origin, destination, offer_price, created_at FROM custom_offers ORDER BY id DESC"
+                """
+                SELECT o.id, o.passenger_id, o.origin, o.destination,
+                       o.offer_price, o.created_at, u.name AS passenger_name
+                FROM custom_offers o
+                JOIN users u ON u.id = o.passenger_id
+                ORDER BY o.id DESC
+                """
             ).fetchall()
+            offers = [item for item in offers if offer_matches_trips(item, mine)]
         else:
             offers = db().execute(
                 """
-                SELECT id, origin, destination, offer_price, created_at
-                FROM custom_offers
-                WHERE passenger_id = ?
-                ORDER BY id DESC
+                SELECT o.id, o.passenger_id, o.origin, o.destination,
+                       o.offer_price, o.created_at, u.name AS passenger_name
+                FROM custom_offers o
+                JOIN users u ON u.id = o.passenger_id
+                WHERE o.passenger_id = ?
+                ORDER BY o.id DESC
                 """,
                 (g.me["id"],),
             ).fetchall()
@@ -3234,18 +3373,25 @@ def admin_user(user_id):
 @app.route("/admin/complaints")
 @require_admin
 def admin_complaints():
-    rows, page, pages, total = paginate_query(
-        """
-        SELECT c.*, u.name AS author_name, t.origin, t.destination
+    status = request.args.get("status") or ""
+    if status not in ("open", "done"):
+        status = ""
+    sql = """
+        SELECT c.*, u.name AS author_name, t.origin, t.destination, t.status AS trip_status
         FROM complaints c
         JOIN users u ON u.id = c.author_id
         LEFT JOIN trips t ON t.id = c.trip_id
-        ORDER BY c.id DESC
-        """,
-        [],
-    )
+        WHERE 1 = 1
+    """
+    args = []
+    if status:
+        sql += " AND c.status = ?"
+        args.append(status)
+    sql += " ORDER BY c.id DESC"
+    rows, page, pages, total = paginate_query(sql, args)
     return render_template(
-        "admin_complaints.html", rows=rows, page=page, pages=pages, total=total
+        "admin_complaints.html", rows=rows, page=page, pages=pages, total=total,
+        status=status,
     )
 
 
@@ -3254,6 +3400,8 @@ def admin_complaints():
 def admin_complaint_close(complaint_id):
     check_csrf()
     note = (request.form.get("staff_note") or "").strip()
+    trip_action = request.form.get("trip_action") or "none"
+    trip_reason = (request.form.get("trip_reason") or "").strip()
     item = db().execute("SELECT * FROM complaints WHERE id = ?", (complaint_id,)).fetchone()
     if not item:
         abort(404)
@@ -3263,14 +3411,50 @@ def admin_complaint_close(complaint_id):
     if not note:
         flash("Напишите, чем закончилась проверка.")
         return redirect(url_for("admin_complaints"))
+    if len(note) > FIELD_LIMITS["staff_note"]:
+        flash("Пометка не длиннее 500 символов.")
+        return redirect(url_for("admin_complaints"))
+    if trip_action not in ("none", "hide", "restore"):
+        flash("Неизвестное действие с поездкой.")
+        return redirect(url_for("admin_complaints"))
+    trip = None
+    if trip_action != "none":
+        if not item["trip_id"]:
+            flash("У жалобы нет поездки — действие с поездкой недоступно.")
+            return redirect(url_for("admin_complaints"))
+        trip = db().execute("SELECT * FROM trips WHERE id = ?", (item["trip_id"],)).fetchone()
+        if not trip:
+            flash("Поездка уже удалена.")
+            return redirect(url_for("admin_complaints"))
+        if trip_action == "hide" and not (trip_reason or note):
+            flash("Укажите причину скрытия поездки.")
+            return redirect(url_for("admin_complaints"))
     db().execute(
         "UPDATE complaints SET status = 'done', staff_note = ? WHERE id = ? AND status = 'open'",
         (note, complaint_id),
     )
-    log_admin("complaint-close", "complaint", complaint_id)
+    if trip_action == "hide":
+        reason = (trip_reason or note)[:FIELD_LIMITS["reason"]]
+        db().execute(
+            "UPDATE trips SET status = 'hidden', hide_reason = ? WHERE id = ?",
+            (reason, trip["id"]),
+        )
+        log_admin("hide", "trip", trip["id"], reason)
+    elif trip_action == "restore":
+        db().execute(
+            "UPDATE trips SET status = 'open', hide_reason = '' WHERE id = ?",
+            (trip["id"],),
+        )
+        log_admin("restore", "trip", trip["id"], "по жалобе")
+    log_admin("complaint-close", "complaint", complaint_id, note)
     db().commit()
-    flash("Жалоба разобрана.")
-    return redirect(url_for("admin_complaints"))
+    if trip_action == "hide":
+        flash("Жалоба разобрана, поездка скрыта.")
+    elif trip_action == "restore":
+        flash("Жалоба разобрана, поездка снова в поиске.")
+    else:
+        flash("Жалоба разобрана.")
+    return redirect(url_for("admin_complaints", status=request.args.get("status") or None))
 
 
 @app.route("/admin/schedules")
@@ -3892,6 +4076,36 @@ def admin_messages():
         db().rollback()
         flash("Не удалось открыть сообщения.")
         return redirect(url_for("admin_home"))
+
+
+@app.route("/robots.txt")
+def robots_txt():
+    body = (
+        "User-agent: *\n"
+        "Allow: /\n"
+        "Disallow: /admin\n"
+        "Disallow: /me\n"
+        "Disallow: /chat\n"
+        "Disallow: /verify\n"
+        "Disallow: /password\n"
+        "Sitemap: %ssitemap.xml\n" % request.url_root
+    )
+    return Response(body, mimetype="text/plain")
+
+
+@app.route("/sitemap.xml")
+def sitemap_xml():
+    pages = [url_for("home"), url_for("trips"), url_for("schedule")]
+    items = "".join(
+        "<url><loc>%s</loc></url>" % (request.url_root.rstrip("/") + path)
+        for path in pages
+    )
+    body = (
+        '<?xml version="1.0" encoding="UTF-8"?>'
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">%s</urlset>'
+        % items
+    )
+    return Response(body, mimetype="application/xml")
 
 
 @app.errorhandler(401)

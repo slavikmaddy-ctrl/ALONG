@@ -476,3 +476,156 @@ def test_complaint_cannot_be_closed_twice(admin_client, user_client, db):
         "SELECT staff_note FROM complaints WHERE id = ?", (complaint_id,)
     ).fetchone()[0]
     assert note == "первая пометка"
+
+def test_robots_and_sitemap(client):
+    robots = client.get("/robots.txt")
+    assert robots.status_code == 200
+    body = robots.get_data(as_text=True)
+    assert "Disallow: /admin" in body
+    assert "Sitemap:" in body
+
+    sitemap = client.get("/sitemap.xml")
+    assert sitemap.status_code == 200
+    xml = sitemap.get_data(as_text=True)
+    assert "<urlset" in xml
+    assert "/trips" in xml
+
+
+def test_meta_tags_present(client):
+    html = client.get("/").get_data(as_text=True)
+    assert 'name="description"' in html
+    assert 'property="og:title"' in html
+    assert 'rel="canonical"' in html
+
+
+def _request_booking(client, trip_id=1):
+    token = get_csrf(client, "/trips/%d" % trip_id)
+    response = client.post(
+        "/trips/%d" % trip_id,
+        data={"action": "request", "seats": "1", "csrf": token},
+    )
+    assert response.status_code == 302
+
+
+def test_status_labels_are_human_readable(user_client, db):
+    _request_booking(user_client)
+    html = user_client.get("/trips/1").get_data(as_text=True)
+    assert "уточнение" in html
+    assert ">clarify<" not in html
+    me_html = user_client.get("/me").get_data(as_text=True)
+    assert "уточнение" in me_html
+    assert ">clarify<" not in me_html
+
+
+def test_driver_notification_counts(app, user_client, driver_client, db):
+    _request_booking(user_client)
+    db.execute(
+        "INSERT INTO messages (sender_id, receiver_id, trip_id, text, is_read, created_at) "
+        "VALUES (2, 3, NULL, 'Здравствуйте', 0, '2026-01-01 10:00:00')"
+    )
+    db.commit()
+    html = driver_client.get("/me").get_data(as_text=True)
+    assert "Новые заявки на ваши поездки: 1" in html
+    assert "Непрочитанные сообщения: 1" in html
+
+
+def test_driver_sees_only_matching_offers(app, driver_client, db):
+    db.execute("UPDATE users SET driver_status = 'approved' WHERE id = 3")
+    db.execute(
+        "INSERT INTO custom_offers (passenger_id, origin, destination, offer_price, created_at) "
+        "VALUES (2, 'Казань', 'Алматы', 3000, '2026-01-01 10:00:00')"
+    )
+    db.execute(
+        "INSERT INTO custom_offers (passenger_id, origin, destination, offer_price, created_at) "
+        "VALUES (2, 'Москва', 'Минск', 2500, '2026-01-01 10:00:00')"
+    )
+    db.commit()
+    html = driver_client.get("/me").get_data(as_text=True)
+    assert "Казань → Алматы" in html
+    assert "Москва → Минск" not in html
+
+
+def test_offer_cannot_repeat_within_day(user_client, db):
+    token = get_csrf(user_client, "/trips")
+    data = {
+        "origin": "Москва",
+        "destination": "Минск",
+        "offer_price": "1500",
+        "csrf": token,
+    }
+    assert user_client.post("/offers", data=data).status_code == 302
+    token = get_csrf(user_client, "/trips")
+    data["csrf"] = token
+    user_client.post("/offers", data=data)
+    total = db.execute(
+        "SELECT COUNT(*) FROM custom_offers WHERE origin = 'Москва' AND destination = 'Минск'"
+    ).fetchone()[0]
+    assert total == 1
+
+
+def test_complaint_daily_limit(user_client, db):
+    server._RATE.clear()
+    for _ in range(3):
+        token = get_csrf(user_client, "/trips/1")
+        response = user_client.post(
+            "/trips/1",
+            data={"action": "complaint", "body": "Нарушение", "csrf": token},
+        )
+        assert response.status_code == 302
+    token = get_csrf(user_client, "/trips/1")
+    page = user_client.post(
+        "/trips/1",
+        data={"action": "complaint", "body": "Ещё одна", "csrf": token},
+    )
+    assert page.status_code == 200
+    assert "Не больше трёх жалоб в сутки" in page.get_data(as_text=True)
+    server._RATE.clear()
+
+
+def test_meeting_length_is_checked_on_server(user_client):
+    _request_booking(user_client)
+    token = get_csrf(user_client, "/trips/1")
+    page = user_client.post(
+        "/trips/1",
+        data={
+            "action": "clarify",
+            "phone": "+79001234567",
+            "meeting": "м" * 201,
+            "csrf": token,
+        },
+    )
+    assert page.status_code == 200
+    assert "Не больше 200 символов" in page.get_data(as_text=True)
+
+
+def test_admin_complaint_hides_trip(app, admin_client, db):
+    db.execute(
+        "INSERT INTO complaints (author_id, trip_id, body, status, staff_note, created_at) "
+        "VALUES (2, 1, 'Проверка маршрута', 'open', '', 1.0)"
+    )
+    db.commit()
+    complaint_id = db.execute("SELECT MAX(id) FROM complaints").fetchone()[0]
+    token = get_csrf(admin_client, "/admin/complaints")
+    response = admin_client.post(
+        "/admin/complaints/%d" % complaint_id,
+        data={
+            "staff_note": "Маршрут не совпадает",
+            "trip_action": "hide",
+            "trip_reason": "Маршрут не совпадает",
+            "csrf": token,
+        },
+    )
+    assert response.status_code == 302
+    assert db.execute("SELECT status FROM trips WHERE id = 1").fetchone()[0] == "hidden"
+    assert db.execute(
+        "SELECT status FROM complaints WHERE id = ?", (complaint_id,)
+    ).fetchone()[0] == "done"
+    actions = [row[0] for row in db.execute("SELECT action FROM admin_log").fetchall()]
+    assert "hide" in actions
+    assert "complaint-close" in actions
+
+
+def test_complaint_status_filter(admin_client):
+    html = admin_client.get("/admin/complaints?status=done").get_data(as_text=True)
+    assert "Описание поправили" in html
+    assert "В описании маршрут короче" not in html

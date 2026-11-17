@@ -1,4 +1,4 @@
-{% extends "admin_base.html" %}
+﻿{% extends "admin_base.html" %}
 {% block title %}ALONG — Пользователи{% endblock %}
 {% block admin_heading %}Пользователи{% endblock %}
 {% block admin_pill %}К списку{% endblock %}
@@ -27,8 +27,8 @@
         <td data-label="Город">{{ person.city or '—' }}</td>
         <td data-label="Поездки">{{ person.trips_count }}</td>
         <td data-label="Оценка">{{ person.rating }}</td>
-        <td data-label="Статус"><span class="admin-badge admin-badge--{{ person.status }}">{{ person.status }}</span></td>
-        <td data-label="Роль"><span class="admin-badge admin-badge--{{ person.role }}">{{ person.role }}</span></td>
+        <td data-label="Статус"><span class="admin-badge admin-badge--{{ person.status }}">{{ person.status|status_label }}</span></td>
+        <td data-label="Роль"><span class="admin-badge admin-badge--{{ person.role }}">{{ person.role|status_label }}</span></td>
         <td data-label="Водитель">
           {% if person.driver_status == 'pending' %}
           <form method="post" action="{{ url_for('admin_driver_review', user_id=person.id) }}" class="admin-inline">
@@ -58,7 +58,7 @@
             <label class="field">
               <select name="status" aria-label="Статус {{ person.name }}">
                 {% for item in ['active', 'review', 'blocked'] %}
-                <option value="{{ item }}" {% if person.status == item %}selected{% endif %}>{{ item }}</option>
+                <option value="{{ item }}" {% if person.status == item %}selected{% endif %}>{{ item|status_label }}</option>
                 {% endfor %}
               </select>
             </label>
@@ -94,7 +94,7 @@
           <td data-label="Кто">{{ item.full_name }}</td>
           <td data-label="Email">{{ item.email }}</td>
           <td data-label="Причина">{{ item.reason }}</td>
-          <td data-label="Статус">{{ item.status }}</td>
+          <td data-label="Статус">{{ item.status|status_label }}</td>
           <td data-label="Решение">
             {% if item.status == 'pending' %}
             <form method="post" action="{{ url_for('admin_resignation', item_id=item.id) }}" class="admin-inline">

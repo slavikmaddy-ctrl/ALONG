@@ -1,4 +1,4 @@
-{% extends "admin_base.html" %}
+﻿{% extends "admin_base.html" %}
 {% block title %}ALONG — {{ person.name }}{% endblock %}
 {% block admin_heading %}{{ person.name }}{% endblock %}
 {% block admin_pill %}К профилю{% endblock %}
@@ -16,7 +16,7 @@
   <label class="field {{ 'is-error' if errors.status else '' }}"><span>Статус</span>
     <select name="status">
       {% for item in ['active', 'review', 'blocked'] %}
-      <option value="{{ item }}" {% if person.status == item %}selected{% endif %}>{{ item }}</option>
+      <option value="{{ item }}" {% if person.status == item %}selected{% endif %}>{{ item|status_label }}</option>
       {% endfor %}
     </select>
     {% if errors.status %}<small>{{ errors.status }}</small>{% endif %}

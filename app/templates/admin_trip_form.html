@@ -1,4 +1,4 @@
-{% extends "admin_base.html" %}
+﻿{% extends "admin_base.html" %}
 {% block title %}ALONG — Поездка{% endblock %}
 {% block admin_heading %}{% if trip %}Изменить поездку{% else %}Новая поездка{% endif %}{% endblock %}
 {% block admin_pill %}К форме{% endblock %}
@@ -6,13 +6,13 @@
 {% if errors.form %}<p class="note-bad">{{ errors.form }}</p>{% endif %}
 <form class="card form-grid" method="post">
   <input type="hidden" name="csrf" value="{{ csrf }}">
-  <label class="field {{ 'is-error' if errors['from'] else '' }}"><span>Откуда</span><input name="from" value="{{ form['from'] }}" list="cities">{% if errors['from'] %}<small>{{ errors['from'] }}</small>{% endif %}</label>
-  <label class="field {{ 'is-error' if errors.to else '' }}"><span>Куда</span><input name="to" value="{{ form.to }}" list="cities">{% if errors.to %}<small>{{ errors.to }}</small>{% endif %}</label>
-  <label class="field {{ 'is-error' if errors.date else '' }}"><span>Дата</span><input type="date" name="date" value="{{ form.date }}">{% if errors.date %}<small>{{ errors.date }}</small>{% endif %}</label>
-  <label class="field {{ 'is-error' if errors.time else '' }}"><span>Время</span><input type="time" name="time" value="{{ form.time }}">{% if errors.time %}<small>{{ errors.time }}</small>{% endif %}</label>
-  <label class="field {{ 'is-error' if errors.price else '' }}"><span>Цена</span><input name="price" value="{{ form.price }}">{% if errors.price %}<small>{{ errors.price }}</small>{% endif %}</label>
-  <label class="field {{ 'is-error' if errors.seats else '' }}"><span>Мест всего</span><input name="seats" value="{{ form.seats }}">{% if errors.seats %}<small>{{ errors.seats }}</small>{% endif %}</label>
-  <label class="field"><span>Посадка</span><input name="pickup" value="{{ form.pickup }}"></label>
+  <label class="field {{ 'is-error' if errors['from'] else '' }}"><span>Откуда</span><input name="from" value="{{ form['from'] }}" list="cities" autocomplete="off" required>{% if errors['from'] %}<small>{{ errors['from'] }}</small>{% endif %}</label>
+  <label class="field {{ 'is-error' if errors.to else '' }}"><span>Куда</span><input name="to" value="{{ form.to }}" list="cities" autocomplete="off" required>{% if errors.to %}<small>{{ errors.to }}</small>{% endif %}</label>
+  <label class="field {{ 'is-error' if errors.date else '' }}"><span>Дата</span><input type="date" name="date" value="{{ form.date }}" required>{% if errors.date %}<small>{{ errors.date }}</small>{% endif %}</label>
+  <label class="field {{ 'is-error' if errors.time else '' }}"><span>Время</span><input type="time" name="time" value="{{ form.time }}" required>{% if errors.time %}<small>{{ errors.time }}</small>{% endif %}</label>
+  <label class="field {{ 'is-error' if errors.price else '' }}"><span>Цена</span><input name="price" value="{{ form.price }}" type="number" inputmode="numeric" min="1" max="100000" step="1" required>{% if errors.price %}<small>{{ errors.price }}</small>{% endif %}</label>
+  <label class="field {{ 'is-error' if errors.seats else '' }}"><span>Мест всего</span><input name="seats" value="{{ form.seats }}" type="number" inputmode="numeric" min="1" max="6" step="1" required>{% if errors.seats %}<small>{{ errors.seats }}</small>{% endif %}</label>
+  <label class="field"><span>Посадка</span><input name="pickup" value="{{ form.pickup }}" maxlength="200" required></label>
   <label class="field {{ 'is-error' if errors.driver else '' }}"><span>Водитель</span>
     <select name="driver_id">
       <option value="">выберите</option>
@@ -35,7 +35,7 @@
   {% if trip.status == 'hidden' %}
     <button class="btn btn-primary" name="action" value="restore" type="submit">Вернуть в поиск</button>
   {% else %}
-    <label class="field {{ 'is-error' if errors.reason else '' }}"><span>Причина скрытия</span><input name="reason" value="{{ form.reason }}">{% if errors.reason %}<small>{{ errors.reason }}</small>{% endif %}</label>
+    <label class="field {{ 'is-error' if errors.reason else '' }}"><span>Причина скрытия</span><input name="reason" value="{{ form.reason }}" maxlength="500" required>{% if errors.reason %}<small>{{ errors.reason }}</small>{% endif %}</label>
     <button class="btn btn-ghost" name="action" value="hide" type="submit">Скрыть</button>
   {% endif %}
 </form>

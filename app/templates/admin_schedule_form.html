@@ -1,4 +1,4 @@
-{% extends "admin_base.html" %}
+﻿{% extends "admin_base.html" %}
 {% block title %}ALONG — Рейс{% endblock %}
 {% block admin_heading %}{% if item %}Изменить рейс{% else %}Новый рейс{% endif %}{% endblock %}
 {% block admin_pill %}К расписанию{% endblock %}
@@ -15,10 +15,10 @@
     </select>
     {% if errors.mode %}<small>{{ errors.mode }}</small>{% endif %}
   </label>
-  <label class="field {{ 'is-error' if errors['from'] else '' }}"><span>Откуда</span><input name="from" value="{{ form['from'] }}" list="cities">{% if errors['from'] %}<small>{{ errors['from'] }}</small>{% endif %}</label>
-  <label class="field {{ 'is-error' if errors.to else '' }}"><span>Куда</span><input name="to" value="{{ form.to }}" list="cities">{% if errors.to %}<small>{{ errors.to }}</small>{% endif %}</label>
-  <label class="field {{ 'is-error' if errors.date else '' }}"><span>Дата</span><input type="date" name="date" value="{{ form.date }}">{% if errors.date %}<small>{{ errors.date }}</small>{% endif %}</label>
-  <label class="field {{ 'is-error' if errors.time else '' }}"><span>Время отправления</span><input type="time" name="time" value="{{ form.time }}">{% if errors.time %}<small>{{ errors.time }}</small>{% endif %}</label>
+  <label class="field {{ 'is-error' if errors['from'] else '' }}"><span>Откуда</span><input name="from" value="{{ form['from'] }}" list="cities" autocomplete="off" required>{% if errors['from'] %}<small>{{ errors['from'] }}</small>{% endif %}</label>
+  <label class="field {{ 'is-error' if errors.to else '' }}"><span>Куда</span><input name="to" value="{{ form.to }}" list="cities" autocomplete="off" required>{% if errors.to %}<small>{{ errors.to }}</small>{% endif %}</label>
+  <label class="field {{ 'is-error' if errors.date else '' }}"><span>Дата</span><input type="date" name="date" value="{{ form.date }}" required>{% if errors.date %}<small>{{ errors.date }}</small>{% endif %}</label>
+  <label class="field {{ 'is-error' if errors.time else '' }}"><span>Время отправления</span><input type="time" name="time" value="{{ form.time }}" required>{% if errors.time %}<small>{{ errors.time }}</small>{% endif %}</label>
   <label class="field {{ 'is-error' if errors.title else '' }}"><span>Название рейса</span><input name="title" value="{{ form.title }}" maxlength="120">{% if errors.title %}<small>{{ errors.title }}</small>{% endif %}</label>
   <label class="field {{ 'is-error' if errors.via else '' }}"><span>Пересадка (необязательно)</span>
     <select name="via">

@@ -65,21 +65,29 @@
       return;
     }
     source.content.querySelectorAll("p").forEach(function (node) {
-      var toast = document.createElement("div");
-      toast.className = "toast";
-      toast.textContent = node.textContent;
-      box.appendChild(toast);
-      window.requestAnimationFrame(function () {
-        toast.classList.add("is-on");
-      });
-      window.setTimeout(function () {
-        toast.classList.remove("is-on");
-        toast.classList.add("is-out");
-        window.setTimeout(function () {
-          toast.remove();
-        }, 400);
-      }, 3000);
+      showToast(node.textContent);
     });
+  }
+
+  function showToast(text) {
+    var box = document.getElementById("toasts");
+    if (!box || !text) {
+      return;
+    }
+    var toast = document.createElement("div");
+    toast.className = "toast";
+    toast.textContent = text;
+    box.appendChild(toast);
+    window.requestAnimationFrame(function () {
+      toast.classList.add("is-on");
+    });
+    window.setTimeout(function () {
+      toast.classList.remove("is-on");
+      toast.classList.add("is-out");
+      window.setTimeout(function () {
+        toast.remove();
+      }, 400);
+    }, 3000);
   }
 
   function isoDate(date) {
@@ -151,6 +159,8 @@
     });
   }
 
+  var filterRequest = null;
+
   function loadTripFilter(form) {
     var params = new URLSearchParams(new FormData(form));
     var action = form.getAttribute("action") || window.location.pathname;
@@ -159,10 +169,18 @@
     if (feed) {
       feed.setAttribute("aria-busy", "true");
     }
-    fetch(next, {
+    var options = {
       headers: { "X-Requested-With": "fetch" },
       credentials: "same-origin"
-    }).then(function (response) {
+    };
+    if (typeof AbortController === "function") {
+      if (filterRequest) {
+        filterRequest.abort();
+      }
+      filterRequest = new AbortController();
+      options.signal = filterRequest.signal;
+    }
+    fetch(next, options).then(function (response) {
       if (!response.ok) {
         throw new Error("status");
       }
@@ -176,11 +194,15 @@
       }
       current.replaceWith(fresh);
       history.replaceState(null, "", next);
-    }).catch(function () {
+    }).catch(function (error) {
+      if (error && error.name === "AbortError") {
+        return;
+      }
       var current = document.querySelector("[data-trip-feed]");
       if (current) {
         current.removeAttribute("aria-busy");
       }
+      showToast("Не удалось обновить список. Повторите.");
     });
   }
 
@@ -340,6 +362,7 @@
     });
 
     var timer = 0;
+    var reloadRequest = null;
     function reload() {
       var endpoint = root.getAttribute("data-endpoint");
       if (!endpoint) {
@@ -371,7 +394,15 @@
       if (mode) {
         params.set("mode", mode);
       }
-      fetch(endpoint + "?" + params.toString(), { credentials: "same-origin" })
+      var options = { credentials: "same-origin" };
+      if (typeof AbortController === "function") {
+        if (reloadRequest) {
+          reloadRequest.abort();
+        }
+        reloadRequest = new AbortController();
+        options.signal = reloadRequest.signal;
+      }
+      fetch(endpoint + "?" + params.toString(), options)
         .then(function (response) {
           if (!response.ok) {
             throw new Error("days");
@@ -382,8 +413,12 @@
           days = dayMap(payload);
           paint();
         })
-        .catch(function () {
+        .catch(function (error) {
+          if (error && error.name === "AbortError") {
+            return;
+          }
           paint();
+          showToast("Не удалось обновить даты. Оставлены прежние.");
         });
     }
 

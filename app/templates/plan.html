@@ -1,4 +1,5 @@
-{% extends "base.html" %}
+﻿{% extends "base.html" %}
+{% block robots %}noindex, nofollow{% endblock %}
 {% block title %}ALONG — Новая поездка{% endblock %}
 {% block main %}
 <section class="page-hero page-hero--share">
@@ -18,29 +19,29 @@
       <input type="hidden" name="to_lat" value="{{ form.to_lat }}">
       <input type="hidden" name="to_lon" value="{{ form.to_lon }}">
       <label class="field {{ 'is-error' if errors['from'] else '' }}"><span>Откуда</span>
-        <input name="from" value="{{ form['from'] }}" list="cities">{% if errors['from'] %}<small>{{ errors['from'] }}</small>{% endif %}
+        <input name="from" value="{{ form['from'] }}" list="cities" autocomplete="off" required>{% if errors['from'] %}<small>{{ errors['from'] }}</small>{% endif %}
       </label>
       <label class="field {{ 'is-error' if errors.to else '' }}"><span>Куда</span>
-        <input name="to" value="{{ form.to }}" list="cities">{% if errors.to %}<small>{{ errors.to }}</small>{% endif %}
+        <input name="to" value="{{ form.to }}" list="cities" autocomplete="off" required>{% if errors.to %}<small>{{ errors.to }}</small>{% endif %}
       </label>
       <label class="field {{ 'is-error' if errors.date else '' }}"><span>Дата</span>
-        <input type="date" name="date" value="{{ form.date }}">{% if errors.date %}<small>{{ errors.date }}</small>{% endif %}
+        <input type="date" name="date" value="{{ form.date }}" required>{% if errors.date %}<small>{{ errors.date }}</small>{% endif %}
       </label>
       <label class="field {{ 'is-error' if errors.time else '' }}"><span>Время</span>
-        <input type="time" name="time" value="{{ form.time }}">{% if errors.time %}<small>{{ errors.time }}</small>{% endif %}
+        <input type="time" name="time" value="{{ form.time }}" required>{% if errors.time %}<small>{{ errors.time }}</small>{% endif %}
       </label>
       <label class="field {{ 'is-error' if errors.price else '' }}"><span>Цена за место</span>
-        <input name="price" value="{{ form.price }}">{% if errors.price %}<small>{{ errors.price }}</small>{% endif %}
+        <input name="price" value="{{ form.price }}" type="number" inputmode="numeric" min="1" max="100000" step="1" required>{% if errors.price %}<small>{{ errors.price }}</small>{% endif %}
       </label>
       <label class="field {{ 'is-error' if errors.seats else '' }}"><span>Мест</span>
-        <input name="seats" value="{{ form.seats }}">{% if errors.seats %}<small>{{ errors.seats }}</small>{% endif %}
+        <input name="seats" value="{{ form.seats }}" type="number" inputmode="numeric" min="1" max="6" step="1" required>{% if errors.seats %}<small>{{ errors.seats }}</small>{% endif %}
       </label>
       <label class="field is-wide {{ 'is-error' if errors.pickup else '' }}"><span>Точка посадки</span>
-        <input name="pickup" value="{{ form.pickup }}">{% if errors.pickup %}<small>{{ errors.pickup }}</small>{% endif %}
+        <input name="pickup" value="{{ form.pickup }}" maxlength="200" required>{% if errors.pickup %}<small>{{ errors.pickup }}</small>{% endif %}
       </label>
-      <label class="field"><span>Точка высадки</span><input name="dropoff" value="{{ form.dropoff }}"></label>
-      <label class="field"><span>Багаж</span><input name="luggage" value="{{ form.luggage }}"></label>
-      <label class="field is-wide"><span>Комментарий</span><textarea name="comment">{{ form.comment }}</textarea></label>
+      <label class="field"><span>Точка высадки</span><input name="dropoff" value="{{ form.dropoff }}" maxlength="200"></label>
+      <label class="field"><span>Багаж</span><input name="luggage" value="{{ form.luggage }}" maxlength="200"></label>
+      <label class="field is-wide"><span>Комментарий</span><textarea name="comment" maxlength="500">{{ form.comment }}</textarea></label>
       <datalist id="cities">{% for city in cities %}<option value="{{ city.name }}">{% endfor %}</datalist>
       <button class="btn btn-primary" type="submit">Опубликовать</button>
     </form>
