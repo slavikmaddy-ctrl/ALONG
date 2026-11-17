@@ -1,9 +1,11 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 """Регрессионные тесты ALONG по требованиям P0/P1."""
 
 from datetime import date, timedelta
+import re
 
 import pytest
+import server
 
 from conftest import ADMIN, USER, get_csrf, login
 
@@ -377,3 +379,100 @@ def test_old_demo_password_no_longer_seeded(client):
     )
     assert response.status_code == 200
     assert "Неверная почта или пароль" in response.get_data(as_text=True)
+
+def test_password_reset_flow(app):
+    client = app.test_client()
+    token = get_csrf(client, "/password/forgot")
+    response = client.post(
+        "/password/forgot", data={"email": USER[0], "csrf": token}
+    )
+    assert response.status_code == 302
+    page = client.get("/password/forgot?sent=1").get_data(as_text=True)
+    match = re.search(r'(/password/reset/[^"?]+)', page)
+    assert match, "В демо-режиме ссылка сброса должна быть на странице"
+    reset_path = match.group(1)
+
+    token = get_csrf(client, reset_path)
+    response = client.post(
+        reset_path,
+        data={"password": "NewPassword99", "repeat": "NewPassword99", "csrf": token},
+    )
+    assert response.status_code == 302
+    login(client, USER[0], "NewPassword99")
+    assert client.get("/me").status_code == 200
+
+
+def test_password_reset_link_is_single_use(app, db):
+    client = app.test_client()
+    token = get_csrf(client, "/password/forgot")
+    client.post("/password/forgot", data={"email": USER[0], "csrf": token})
+    page = client.get("/password/forgot?sent=1").get_data(as_text=True)
+    reset_path = re.search(r'(/password/reset/[^"?]+)', page).group(1)
+    token = get_csrf(client, reset_path)
+    client.post(
+        reset_path,
+        data={"password": "AnotherPass77", "repeat": "AnotherPass77", "csrf": token},
+    )
+    again = client.get(reset_path)
+    assert again.status_code == 400
+
+
+def test_session_cookie_secure_in_prod(app, monkeypatch):
+    monkeypatch.setattr(server, "SECURE_COOKIES", True)
+    client = app.test_client()
+    token = get_csrf(client, "/login")
+    response = client.post(
+        "/login", data={"email": ADMIN[0], "password": ADMIN[1], "csrf": token}
+    )
+    assert response.status_code == 302
+    assert "Secure" in (response.headers.get("Set-Cookie") or "")
+
+
+def test_verify_link_does_not_create_session(app, db):
+    raw = "verify-token-for-test"
+    db.execute(
+        "UPDATE users SET verify_token = ?, verified = 0 WHERE email = ?",
+        (server.hash_token(raw), USER[0]),
+    )
+    db.commit()
+    client = app.test_client()
+    response = client.get("/verify/" + raw)
+    assert response.status_code == 302
+    assert "/login" in response.headers["Location"]
+    assert client.get("/me").status_code == 302
+
+
+def test_forbidden_page_is_branded(user_client):
+    response = user_client.get("/admin")
+    assert response.status_code == 403
+    html = response.get_data(as_text=True)
+    assert "Недостаточно прав" in html
+    assert "ALONG" in html
+
+
+def test_csv_export_escapes_formulas(admin_client, db):
+    db.execute(
+        "UPDATE users SET name = '=2+2' WHERE id = (SELECT driver_id FROM trips WHERE id = 1)"
+    )
+    db.commit()
+    payload = admin_client.get("/admin/trips/export").get_data(as_text=True)
+    assert "'=2+2" in payload
+
+
+def test_complaint_cannot_be_closed_twice(admin_client, user_client, db):
+    db.execute(
+        "INSERT INTO complaints (author_id, trip_id, body, status, staff_note, created_at) "
+        "VALUES (2, 1, 'Проверка', 'done', 'первая пометка', 1.0)"
+    )
+    db.commit()
+    complaint_id = db.execute("SELECT MAX(id) FROM complaints").fetchone()[0]
+    token = get_csrf(admin_client, "/admin/complaints")
+    response = admin_client.post(
+        "/admin/complaints/%d" % complaint_id,
+        data={"staff_note": "вторая пометка", "csrf": token},
+    )
+    assert response.status_code == 302
+    note = db.execute(
+        "SELECT staff_note FROM complaints WHERE id = ?", (complaint_id,)
+    ).fetchone()[0]
+    assert note == "первая пометка"

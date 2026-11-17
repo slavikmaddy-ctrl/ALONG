@@ -29,6 +29,21 @@
         <button class="btn btn-primary" type="submit">Сохранить</button>
       </form>
     </section>
+    <section class="card">
+      <h2>Пароль и сеансы</h2>
+      <p class="muted">После смены пароля остальные устройства выйдут из профиля.</p>
+      <form class="form-grid" method="post" action="{{ url_for('me_password') }}" style="margin-top: 12px;">
+        <input type="hidden" name="csrf" value="{{ csrf }}">
+        <label class="field"><span>Текущий пароль</span><input name="current_password" type="password" autocomplete="current-password" required></label>
+        <label class="field"><span>Новый пароль</span><input name="password" type="password" autocomplete="new-password" minlength="8" required></label>
+        <label class="field"><span>Повторите пароль</span><input name="repeat" type="password" autocomplete="new-password" minlength="8" required></label>
+        <button class="btn btn-primary" type="submit">Сменить пароль</button>
+      </form>
+      <form method="post" action="{{ url_for('logout_all') }}" style="margin-top: 12px;">
+        <input type="hidden" name="csrf" value="{{ csrf }}">
+        <button class="btn btn-ghost" type="submit">Выйти на всех устройствах</button>
+      </form>
+    </section>
     {% if me.driver_status == 'approved' %}
     <section class="card">
       <h2>Статус водителя</h2>

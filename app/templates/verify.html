@@ -15,6 +15,7 @@
     <h2>Демо-режим почты</h2>
     <p>Аккаунт создан{% if email %} для {{ email }}{% endif %}. Почтовый сервер не настроен (ALONG_SMTP_HOST), поэтому письмо не отправлено, а ссылка показана здесь.</p>
   {% endif %}
+  <p class="muted">После подтверждения войдите с почтой и паролем.</p>
   {% if token %}
     <p style="margin-top: 12px;"><a class="btn btn-primary" href="{{ url_for('verify_token', token=token, next=nxt) }}">Подтвердить почту</a></p>
   {% endif %}

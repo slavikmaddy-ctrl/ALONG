@@ -24,6 +24,7 @@ from flask import (
     Flask, Response, abort, flash, g, redirect, render_template, request,
     send_from_directory, session, url_for,
 )
+from itsdangerous import BadSignature, SignatureExpired, URLSafeTimedSerializer
 
 from mail import send_mail, smtp_configured
 
@@ -390,6 +391,128 @@ def cache_set(key, value, ttl=600):
         _CACHE[key] = (time.time() + ttl, value)
 
 
+_RATE = {}
+_RATE_LOCK = threading.Lock()
+
+
+def rate_limit(key, limit, window=60):
+    """Возвращает True, если за окно исчерпан лимит действий."""
+    if not key:
+        return False
+    moment = time.time()
+    with _RATE_LOCK:
+        if len(_RATE) > 2000:
+            for old in [name for name, item in _RATE.items() if item[0] < moment]:
+                _RATE.pop(old, None)
+        bucket = _RATE.get(key)
+        if not bucket or bucket[0] < moment:
+            _RATE[key] = [moment + window, 1]
+            return False
+        if bucket[1] >= limit:
+            return True
+        bucket[1] += 1
+        return False
+
+
+def client_key(prefix):
+    return prefix + ":" + (request.remote_addr or "local")
+
+
+PASSWORD_RESET_SALT = "along-password-reset"
+PASSWORD_RESET_MAX_AGE = 30 * 60
+
+
+def password_serializer():
+    return URLSafeTimedSerializer(app.secret_key, salt=PASSWORD_RESET_SALT)
+
+
+def password_fingerprint(password_hash):
+    return hashlib.sha256((password_hash or "").encode("utf-8")).hexdigest()[:32]
+
+
+def password_reset_token(user):
+    payload = "{}:{}".format(user["id"], password_fingerprint(user["password_hash"]))
+    return password_serializer().dumps(payload)
+
+
+def password_reset_target(value):
+    try:
+        payload = password_serializer().loads(value, max_age=PASSWORD_RESET_MAX_AGE)
+    except (BadSignature, SignatureExpired, TypeError, ValueError):
+        return None
+    raw_id, _, fingerprint = str(payload).partition(":")
+    try:
+        user_id = int(raw_id)
+    except (TypeError, ValueError):
+        return None
+    user = db().execute("SELECT * FROM users WHERE id = ?", (user_id,)).fetchone()
+    if not user or password_fingerprint(user["password_hash"]) != fingerprint:
+        return None
+    return user
+
+
+def reset_password(user, new_password):
+    db().execute(
+        "UPDATE users SET password_hash = ? WHERE id = ?",
+        (hash_password(new_password), user["id"]),
+    )
+    db().execute("DELETE FROM sessions WHERE user_id = ?", (user["id"],))
+    db().commit()
+
+
+def password_problem(password, repeat):
+    if len(password) < 8:
+        return "Не меньше 8 символов"
+    if password != repeat:
+        return "Пароли не совпадают"
+    return None
+
+
+def demo_password_link(user, nxt=""):
+    token = password_reset_token(user)
+    path = url_for("password_reset", token=token)
+    if nxt:
+        path += "?" + urlencode({"next": nxt})
+    link = (BASE_URL + path) if BASE_URL else (request.url_root.rstrip("/") + path)
+    sent, reason = send_mail(
+        user["email"],
+        "ALONG: восстановление пароля",
+        "Чтобы задать новый пароль, откройте ссылку в течение 30 минут:\n%s\n\n"
+        "Если вы не просили восстановление, просто проигнорируйте письмо." % link,
+    )
+    return link, sent, reason
+
+
+def csv_cell(value):
+    text = "" if value is None else str(value)
+    if text[:1] in ("=", "+", "-", "@", "\t", "\r"):
+        return "'" + text
+    return text
+
+
+def cleanup_sessions(connection=None):
+    target = connection if connection is not None else db()
+    try:
+        target.execute("DELETE FROM sessions WHERE expires_at < ?", (now_ts(),))
+        target.commit()
+    except sqlite3.Error:
+        try:
+            target.rollback()
+        except sqlite3.Error:
+            pass
+
+
+_LAST_SESSION_CLEAN = 0.0
+
+
+def maybe_clean_sessions():
+    global _LAST_SESSION_CLEAN
+    if time.time() - _LAST_SESSION_CLEAN < 86400:
+        return
+    _LAST_SESSION_CLEAN = time.time()
+    cleanup_sessions()
+
+
 def nearest_city(lat, lon, limit_km=25):
     best = None
     for city in CITIES:
@@ -536,6 +659,7 @@ def init_db():
     migrate_offers_and_schedule(con)
     migrate_admin_log(con)
     create_indexes(con)
+    con.execute("DELETE FROM sessions WHERE expires_at < ?", (now_ts(),))
     con.commit()
     con.close()
 
@@ -1015,6 +1139,7 @@ def open_db():
         g.db.execute("PRAGMA synchronous = NORMAL")
     except sqlite3.OperationalError:
         log.warning("Не удалось включить WAL: база занята другим процессом")
+    maybe_clean_sessions()
 
 
 @app.teardown_request
@@ -1116,6 +1241,12 @@ def geocode():
     query = (request.args.get("q") or "").strip()
     if len(query) < 2:
         return Response("[]", mimetype="application/json")
+    if rate_limit(client_key("geocode"), 60, 60):
+        return Response(
+            json.dumps({"error": "Слишком много запросов. Подождите минуту."}, ensure_ascii=False),
+            status=429,
+            mimetype="application/json",
+        )
     try:
         places = nominatim_places(query[:120])
     except Exception:
@@ -1519,6 +1650,9 @@ def create_offer():
     if not me["verified"]:
         flash("Подтвердите почту, чтобы предложить цену.")
         return redirect(url_for("me_page"))
+    if rate_limit("offer:" + str(me["id"]), 20, 60):
+        flash("Слишком много предложений. Подождите минуту.")
+        return redirect(nxt)
     check_csrf()
     origin = (request.form.get("origin") or "").strip()
     dest = (request.form.get("destination") or "").strip()
@@ -1731,7 +1865,9 @@ def trip_page(trip_id):
             cancel_trip(row)
         elif action == "complaint" and me["id"] != row["driver_id"]:
             body = (request.form.get("body") or "").strip()
-            if not body:
+            if rate_limit("complaint:" + str(me["id"]), 10, 3600):
+                errors["complaint"] = "Слишком много жалоб. Повторите через час."
+            elif not body:
                 errors["complaint"] = "Заполните поле"
             else:
                 db().execute(
@@ -2362,6 +2498,8 @@ def login():
     expired = request.args.get("expired") == "1"
     if request.method == "POST":
         check_csrf()
+        if rate_limit(client_key("login"), 60, 600):
+            errors["form"] = "Слишком много попыток входа. Подождите немного."
         email = (request.form.get("email") or "").strip()
         password = request.form.get("password") or ""
         if not email:
@@ -2397,6 +2535,15 @@ def login():
                         "INSERT INTO sessions (token, user_id, expires_at) VALUES (?, ?, ?)",
                         (hash_token(token), user["id"], now_ts() + SESSION_SECONDS),
                     )
+                    db().execute(
+                        """
+                        DELETE FROM sessions WHERE user_id = ? AND token NOT IN (
+                            SELECT token FROM sessions WHERE user_id = ?
+                            ORDER BY expires_at DESC LIMIT 10
+                        )
+                        """,
+                        (user["id"], user["id"]),
+                    )
                     db().commit()
                     posted_next = (request.form.get("next") or "").strip()
                     target = nxt
@@ -2415,6 +2562,9 @@ def register():
     nxt = safe_next(request.args.get("next") or request.form.get("next"))
     if request.method == "POST":
         check_csrf()
+        if rate_limit(client_key("register"), 20, 3600):
+            flash("Слишком много регистраций с этого адреса. Попробуйте позже.")
+            return redirect(url_for("register"))
         form["name"] = (request.form.get("name") or "").strip()
         form["email"] = (request.form.get("email") or "").strip().lower()
         form["city"] = (request.form.get("city") or "").strip()
@@ -2544,16 +2694,127 @@ def verify_token(token):
         flash("Ссылка недействительна.")
         return redirect(url_for("login"))
     db().execute("UPDATE users SET verified = 1, verify_token = NULL WHERE id = ?", (user["id"],))
-    sid = secrets.token_urlsafe(32)
-    db().execute(
-        "INSERT INTO sessions (token, user_id, expires_at) VALUES (?, ?, ?)",
-        (hash_token(sid), user["id"], now_ts() + SESSION_SECONDS),
-    )
     db().commit()
     session.pop("pending_verify", None)
-    target = safe_next(request.args.get("next"))
-    response = redirect(target)
-    response.set_cookie("along_sid", sid, httponly=True, samesite="Lax", secure=SECURE_COOKIES, max_age=SESSION_SECONDS)
+    session.pop("pending_email", None)
+    flash("Почта подтверждена. Войдите, чтобы продолжить.")
+    nxt = (request.args.get("next") or "").strip()
+    target = url_for("login", next=nxt) if nxt else url_for("login")
+    return redirect(target)
+
+
+@app.route("/password/forgot", methods=["GET", "POST"])
+def password_forgot():
+    errors = {}
+    email = ""
+    sent = request.args.get("sent") == "1"
+    demo_link = session.pop("reset_demo_link", "")
+    if request.method == "POST":
+        check_csrf()
+        if rate_limit(client_key("forgot"), 10, 3600):
+            errors["form"] = "Слишком много запросов. Попробуйте через час."
+        email = (request.form.get("email") or "").strip().lower()
+        if not email:
+            errors["email"] = "Введите почту"
+        elif not EMAIL_RE.match(email):
+            errors["email"] = "Напишите почту целиком, например name@example.com"
+        if not errors:
+            user = db().execute("SELECT * FROM users WHERE email = ?", (email,)).fetchone()
+            if user and user["status"] != "blocked":
+                nxt = safe_next(request.args.get("next") or request.form.get("next"))
+                link, delivered, reason = demo_password_link(
+                    user, nxt if nxt != url_for("home") else ""
+                )
+                if delivered:
+                    flash("Ссылка отправлена на %s." % user["email"])
+                else:
+                    session["reset_demo_link"] = link
+                    if reason == "smtp":
+                        log.info("Демо-режим почты: восстановление для %s: %s", user["email"], link)
+                        flash("Демо-режим: письмо не отправлено, ссылка показана на странице.")
+                    else:
+                        flash("Письмо не ушло. Ссылка показана на странице.")
+            else:
+                flash("Если почта зарегистрирована, ссылка отправлена.")
+            return redirect(url_for("password_forgot", sent=1))
+    return render_template(
+        "password.html", mode="forgot", errors=errors, email=email,
+        sent=sent, demo_link=demo_link,
+    )
+
+
+@app.route("/password/reset/<token>", methods=["GET", "POST"])
+def password_reset(token):
+    user = password_reset_target(token)
+    if not user:
+        return render_template(
+            "password.html", mode="invalid", errors={}, email="",
+            sent=False, demo_link="",
+        ), 400
+    errors = {}
+    if request.method == "POST":
+        check_csrf()
+        if rate_limit(client_key("reset"), 10, 3600):
+            errors["form"] = "Слишком много попыток. Попробуйте позже."
+        password = request.form.get("password") or ""
+        repeat = request.form.get("repeat") or ""
+        problem = password_problem(password, repeat)
+        if problem:
+            errors["password"] = problem
+        if not errors:
+            reset_password(user, password)
+            flash("Пароль изменён. Войдите с новым паролем.")
+            return redirect(url_for("login"))
+    return render_template(
+        "password.html", mode="reset", errors=errors, email=user["email"],
+        sent=False, demo_link="",
+    )
+
+
+@app.route("/me/password", methods=["POST"])
+@require_user()
+def me_password():
+    check_csrf()
+    if rate_limit("password:" + str(g.me["id"]), 10, 3600):
+        flash("Слишком много попыток. Попробуйте через час.")
+        return redirect(url_for("me_page"))
+    current = request.form.get("current_password") or ""
+    password = request.form.get("password") or ""
+    repeat = request.form.get("repeat") or ""
+    if not check_password(current, g.me["password_hash"]):
+        flash("Текущий пароль не совпадает.")
+        return redirect(url_for("me_page"))
+    problem = password_problem(password, repeat)
+    if not problem and check_password(password, g.me["password_hash"]):
+        problem = "Новый пароль совпадает с текущим"
+    if problem:
+        flash(problem)
+        return redirect(url_for("me_page"))
+    db().execute(
+        "UPDATE users SET password_hash = ? WHERE id = ?",
+        (hash_password(password), g.me["id"]),
+    )
+    token = request.cookies.get("along_sid")
+    if token:
+        db().execute(
+            "DELETE FROM sessions WHERE user_id = ? AND token != ?",
+            (g.me["id"], hash_token(token)),
+        )
+    db().commit()
+    flash("Пароль изменён. Остальные сеансы завершены.")
+    return redirect(url_for("me_page"))
+
+
+@app.route("/logout/all", methods=["POST"])
+@require_user()
+def logout_all():
+    check_csrf()
+    db().execute("DELETE FROM sessions WHERE user_id = ?", (g.me["id"],))
+    db().commit()
+    session.clear()
+    flash("Все сеансы завершены. Войдите снова.")
+    response = redirect(url_for("home"))
+    response.delete_cookie("along_sid", httponly=True, samesite="Lax", secure=SECURE_COOKIES)
     return response
 
 
@@ -2649,9 +2910,10 @@ def admin_trips_export():
     ])
     for row in rows:
         writer.writerow([
-            row["id"], row["depart_at"], row["origin"], row["destination"],
-            row["driver_name"], row["price"], row["seats_total"],
-            row["seats_taken"], row["status"],
+            csv_cell(row["id"]), csv_cell(row["depart_at"]), csv_cell(row["origin"]),
+            csv_cell(row["destination"]), csv_cell(row["driver_name"]),
+            csv_cell(row["price"]), csv_cell(row["seats_total"]),
+            csv_cell(row["seats_taken"]), csv_cell(row["status"]),
         ])
     payload = buffer.getvalue().encode("utf-8-sig")
     return Response(
@@ -2995,11 +3257,14 @@ def admin_complaint_close(complaint_id):
     item = db().execute("SELECT * FROM complaints WHERE id = ?", (complaint_id,)).fetchone()
     if not item:
         abort(404)
+    if item["status"] != "open":
+        flash("Жалоба уже разобрана. Пометка не перезаписывается.")
+        return redirect(url_for("admin_complaints"))
     if not note:
         flash("Напишите, чем закончилась проверка.")
         return redirect(url_for("admin_complaints"))
     db().execute(
-        "UPDATE complaints SET status = 'done', staff_note = ? WHERE id = ?",
+        "UPDATE complaints SET status = 'done', staff_note = ? WHERE id = ? AND status = 'open'",
         (note, complaint_id),
     )
     log_admin("complaint-close", "complaint", complaint_id)
@@ -3326,7 +3591,7 @@ def support_admin():
     return db().execute(
         """
         SELECT id, name, email, role FROM users
-        WHERE role = 'admin'
+        WHERE role = 'admin' AND status = 'active'
         ORDER BY id LIMIT 1
         """
     ).fetchone()
@@ -3607,6 +3872,9 @@ def chat():
     if request.method == "POST" and not current_user()["verified"]:
         flash("Подтвердите почту, чтобы писать в чат.")
         return redirect(url_for("me_page"))
+    if request.method == "POST" and rate_limit("chat:" + str(g.me["id"]), 60, 60):
+        flash("Слишком много сообщений. Подождите минуту.")
+        return redirect(url_for("chat"))
     try:
         return chat_page(False)
     except sqlite3.Error:
@@ -3624,6 +3892,18 @@ def admin_messages():
         db().rollback()
         flash("Не удалось открыть сообщения.")
         return redirect(url_for("admin_home"))
+
+
+@app.errorhandler(401)
+def unauthorized(_exc):
+    return render_template(
+        "error.html", code=401, text="Войдите, чтобы продолжить."
+    ), 401
+
+
+@app.errorhandler(403)
+def forbidden(_exc):
+    return render_template("denied.html"), 403
 
 
 @app.errorhandler(404)
