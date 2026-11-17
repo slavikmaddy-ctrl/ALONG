@@ -1,0 +1,50 @@
+<div class="chat-layout">
+  <aside class="card chat-list">
+    <h2>Диалоги</h2>
+    {% if support_href %}
+    <a class="chat-peer {% if peer and support and peer.id == support.id and not active_trip %}is-active{% endif %}" href="{{ support_href }}">
+      <span>Служба ALONG</span>
+      {% if support_unread %}<span class="chat-unread">{{ support_unread }}</span>{% endif %}
+    </a>
+    {% endif %}
+    {% for item in dialogs %}
+    <a class="chat-peer {% if peer and peer.id == item.other_id and (item.trip_id or none) == (active_trip or none) %}is-active{% endif %}" href="{{ item.href }}">
+      <span>{{ item.label }}{% if item.origin %} · {{ item.origin }} → {{ item.destination }}{% endif %}</span>
+      {% if item.unread %}<span class="chat-unread">{{ item.unread }}</span>{% endif %}
+    </a>
+    {% else %}
+    {% if not support_href %}<p class="muted">Диалогов пока нет.</p>{% endif %}
+    {% endfor %}
+  </aside>
+  <section class="card chat-thread">
+    {% if access_error %}<p class="note-bad">{{ access_error }}</p>{% endif %}
+    {% if peer %}
+    <h2>{{ peer_title }}</h2>
+    {% if trip_label %}<p class="muted">{{ trip_label }}</p>{% endif %}
+    <div class="chat-log">
+      {% for msg in messages %}
+      <article class="chat-msg {% if msg.sender_id == me.id %}is-mine{% endif %}">
+        <p class="chat-msg__who">{{ msg.display_name }}</p>
+        <p class="chat-msg__text">{{ msg.text }}</p>
+        <p class="muted">{{ msg.created_at }}</p>
+      </article>
+      {% else %}
+      <p class="muted">Сообщений пока нет. Напишите первым.</p>
+      {% endfor %}
+    </div>
+    <form class="chat-form stack" method="post" action="{{ chat_action }}">
+      <input type="hidden" name="csrf" value="{{ csrf }}">
+      <input type="hidden" name="receiver_id" value="{{ peer.id }}">
+      {% if active_trip %}<input type="hidden" name="trip_id" value="{{ active_trip }}">{% endif %}
+      <label class="field"><span>Сообщение</span>
+        <textarea name="text" maxlength="2000" required>{{ draft }}</textarea>
+      </label>
+      {% if send_error %}<p class="note-bad">{{ send_error }}</p>{% endif %}
+      <button class="btn btn-primary" type="submit">Отправить</button>
+    </form>
+    {% else %}
+    <h2>Переписка</h2>
+    <p class="muted">Выберите диалог слева. Служба ALONG отвечает от имени сервиса.</p>
+    {% endif %}
+  </section>
+</div>

@@ -1,0 +1,36 @@
+{% extends "admin_base.html" %}
+{% block title %}ALONG — Жалобы{% endblock %}
+{% block admin_heading %}Жалобы{% endblock %}
+{% block admin_pill %}К обращениям{% endblock %}
+{% block admin %}
+{% if not rows %}
+  <section class="card"><h2>Жалоб нет</h2></section>
+{% else %}
+  <div class="admin-complaints">
+  {% for item in rows %}
+  <article class="admin-complaint">
+    <header class="admin-complaint__top">
+      <strong>{{ item.author_name }}</strong>
+      <span class="admin-badge admin-badge--{{ item.status }}">{{ item.status }}</span>
+    </header>
+    <p class="admin-complaint__body">{{ item.body }}</p>
+    {% if item.origin %}
+      <p><a class="text-link" href="{{ url_for('admin_trip_edit', trip_id=item.trip_id) }}">{{ item.origin }} → {{ item.destination }}</a></p>
+    {% else %}
+      <p class="muted">Поездка недоступна</p>
+    {% endif %}
+    {% if item.status == 'open' %}
+    <form method="post" action="{{ url_for('admin_complaint_close', complaint_id=item.id) }}" class="admin-complaint__resolve">
+      <input type="hidden" name="csrf" value="{{ csrf }}">
+      <label class="field"><span>Чем закончилась проверка</span><input name="staff_note"></label>
+      <button class="btn btn-primary" type="submit">Разобрана</button>
+    </form>
+    {% else %}
+      <p class="muted">Внутренняя пометка: {{ item.staff_note }}</p>
+    {% endif %}
+  </article>
+  {% endfor %}
+  </div>
+{% include "_pager.html" %}
+{% endif %}
+{% endblock %}

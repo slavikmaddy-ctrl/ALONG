@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}ALONG — Сообщения{% endblock %}
+{% block main %}
+<section class="page-hero page-hero--city">
+  <div class="page-hero__copy">
+    <h1>Сообщения</h1>
+    <a class="glass-pill" href="#chat">Диалоги</a>
+  </div>
+</section>
+<div class="page" id="chat">
+  <div class="container">
+    {% include "chat_pane.html" %}
+  </div>
+</div>
+{% endblock %}

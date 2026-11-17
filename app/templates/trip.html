@@ -1,0 +1,224 @@
+{% extends "base.html" %}
+{% block title %}ALONG — {{ trip.origin }} → {{ trip.destination }}{% endblock %}
+{% block main %}
+<section class="page-hero page-hero--drive">
+  <div class="page-hero__copy">
+    <h1>{{ trip.origin }} → {{ trip.destination }}</h1>
+    <a class="glass-pill" href="#trip-detail">О поездке</a>
+  </div>
+</section>
+<div class="page" id="trip-detail">
+  <div class="container trip-layout">
+    <article class="card">
+      <p class="eyebrow">{{ fmt_dt(trip.depart_at) }}</p>
+      <div class="ride-top">
+        <p class="price">{{ trip.price }}&nbsp;₽</p>
+      </div>
+      <p class="muted">Цена за место. Свободно {{ left }} из {{ trip.seats_total }}.</p>
+      <p style="margin-top: 8px;"><span class="badge {% if badge == 'почти заполнено' %}badge-lime{% elif badge == 'есть места' %}badge-ok{% else %}badge-muted{% endif %}">{% if trip.status == 'cancelled' %}Отменено водителем{% else %}{{ badge }}{% endif %}</span></p>
+      <figure class="scene">
+        <img src="{{ url_for('media', name='road.jpg') }}" alt="Дорога днём">
+        <figcaption>Посадка: {{ trip.pickup }}. Высадка: {{ trip.dropoff }}.</figcaption>
+      </figure>
+      <p style="margin-top: 10px;">{{ trip.comment }}</p>
+      {% if trip.luggage %}<p class="muted">Багаж: {{ trip.luggage }}</p>{% endif %}
+    </article>
+    <aside class="card">
+      <div class="person">
+        <img class="avatar" src="{{ url_for('media', name=trip.photo) }}" alt="{{ trip.driver_name }}">
+        <div>
+          <h2><a class="text-link" href="{{ url_for('public_profile', user_id=trip.driver_id) }}">{{ trip.driver_name }}</a></h2>
+          <p class="muted"><span class="rating">{{ trip.rating }}</span> · {{ trip.trips_count }} поездок</p>
+          {% if chat_with_driver %}
+          <p style="margin-top: 8px;"><a class="text-link" href="{{ chat_href(trip.driver_id, trip.id) }}">Написать</a></p>
+          {% endif %}
+        </div>
+      </div>
+      <p style="margin-top: 12px;">{{ trip.car }}</p>
+      <p class="muted" style="margin-top: 8px;">{{ trip.about }}</p>
+      <p class="muted" style="margin-top: 8px;">Телефон водителя на карточке не показывается.</p>
+    </aside>
+    <section class="card">
+      <h2>Как подтверждается место</h2>
+      {% set step = 5 if booking and booking.status == 'confirmed' else 3 if booking and booking.status == 'plan' else 2 if booking and booking.status == 'clarify' else 1 %}
+      <ol class="steps">
+        <li class="{{ 'is-done' if step > 1 else 'is-current' if step == 1 and me and not is_driver else '' }}"><span class="step-index">1</span><span class="step-label">Заявка</span></li>
+        <li class="{{ 'is-done' if step > 2 else 'is-current' if step == 2 else '' }}"><span class="step-index">2</span><span class="step-label">Уточнение</span><span class="step-note">{% if step == 2 %}Сейчас{% endif %}</span></li>
+        <li class="{{ 'is-done' if step > 3 else 'is-current' if step == 3 else '' }}"><span class="step-index">3</span><span class="step-label">План</span></li>
+        <li class="{{ 'is-done' if step > 4 else '' }}"><span class="step-index">4</span><span class="step-label">Подтверждение</span></li>
+      </ol>
+      {% if errors.form %}<p class="note-bad">{{ errors.form }}</p>{% endif %}
+      {% if not me %}
+        <p style="margin-top: 12px;">Подтверждение доступно после входа. Заявка сейчас не создаётся.</p>
+        <div class="empty-actions">
+          <a class="btn btn-primary" href="{{ url_for('login', next=request.path) }}">Подтвердить место</a>
+          <a class="btn btn-ghost" href="{{ url_for('register', next=request.path) }}">Регистрация</a>
+        </div>
+      {% elif is_driver %}
+        <p style="margin-top: 12px;">Это ваша поездка. Заявки пассажиров ниже.</p>
+        {% if trip.status != 'cancelled' %}
+        <form method="post" onsubmit="return confirm('Отменить поездку?');">
+          <input type="hidden" name="csrf" value="{{ csrf }}">
+          <input type="hidden" name="action" value="cancel_trip">
+          <button class="btn btn-ghost" type="submit">Отменить поездку</button>
+        </form>
+        {% else %}
+        <p class="note-bad">Отменено водителем</p>
+        {% endif %}
+      {% elif trip.status == 'cancelled' %}
+        <p class="note-bad">Отменено водителем</p>
+      {% elif past or left < 1 and not booking %}
+        <p class="note-bad">Мест не осталось.</p>
+        <button class="btn btn-ghost" type="button" disabled>Подтвердить место</button>
+      {% elif not booking %}
+        <form class="stack" method="post" style="margin-top: 12px;">
+          <input type="hidden" name="csrf" value="{{ csrf }}">
+          <input type="hidden" name="action" value="request">
+          <label class="field"><span>Сколько мест</span>
+            <input name="seats" value="1">
+            {% if errors.seats %}<small>{{ errors.seats }}</small>{% endif %}
+          </label>
+          <p class="muted">Имя из профиля: {{ me.name }}</p>
+          <button class="btn btn-primary" type="submit">Отправить заявку</button>
+        </form>
+      {% elif booking.status == 'clarify' %}
+        <form class="stack" method="post" style="margin-top: 12px;">
+          <input type="hidden" name="csrf" value="{{ csrf }}">
+          <input type="hidden" name="action" value="clarify">
+          <label class="field {{ 'is-error' if errors.phone else '' }}">
+            <span>Телефон</span>
+            <input name="phone" value="{{ booking.phone or '' }}" placeholder="+79000000000" aria-invalid="{{ 'true' if errors.phone else 'false' }}">
+            <small>{{ errors.phone or 'Формат +7 и 10 цифр.' }}</small>
+          </label>
+          <label class="field {{ 'is-error' if errors.meeting else '' }}">
+            <span>Место встречи</span>
+            <input name="meeting" value="{{ booking.meeting or trip.pickup }}">
+            {% if errors.meeting %}<small>{{ errors.meeting }}</small>{% endif %}
+          </label>
+          <label class="field"><span>Багаж</span><input name="luggage" value="{{ booking.luggage or '' }}"></label>
+          <label class="field"><span>Комментарий</span><textarea name="comment">{{ booking.comment or '' }}</textarea></label>
+          <button class="btn btn-primary" type="submit">Сохранить уточнение</button>
+        </form>
+      {% elif booking.status == 'plan' %}
+        <p>План: {{ fmt_dt(trip.depart_at) }}, посадка {{ booking.meeting or trip.pickup }}, {{ booking.seats }} мест, {{ trip.price }}&nbsp;₽.</p>
+        <form method="post" style="margin-top: 8px;">
+          <input type="hidden" name="csrf" value="{{ csrf }}">
+          <input type="hidden" name="action" value="plan_ok">
+          <button class="btn btn-primary" type="submit" {% if booking.passenger_ok %}disabled{% endif %}>План верный</button>
+        </form>
+        {% if booking.passenger_ok and booking.driver_ok %}
+        <form method="post" style="margin-top: 8px;">
+          <input type="hidden" name="csrf" value="{{ csrf }}">
+          <input type="hidden" name="action" value="confirm">
+          <button class="btn btn-primary" type="submit">Подтвердить место</button>
+        </form>
+        {% else %}
+        <p class="muted">Подтверждение откроется, когда план отметят и пассажир, и водитель.</p>
+        {% endif %}
+      {% elif booking.status == 'confirmed' %}
+        <p class="note-ok"><strong>Подтверждено.</strong> Место закреплено за вами.</p>
+      {% endif %}
+      {% if booking and booking.status in ['clarify', 'plan', 'confirmed'] %}
+      <form method="post" style="margin-top: 8px;">
+        <input type="hidden" name="csrf" value="{{ csrf }}">
+        <input type="hidden" name="action" value="cancel_booking">
+        <button class="btn btn-ghost" type="submit">Отменить заявку</button>
+      </form>
+      {% endif %}
+    </section>
+    {% if is_driver %}
+    <section class="card">
+      <h2>Заявки</h2>
+      {% for item in driver_bookings %}
+        <article style="margin-top: 12px;">
+          <p><strong>{{ item.name }}</strong> · {% if trip.status == 'cancelled' %}Отменено водителем{% else %}{{ item.status }}{% endif %} · мест {{ item.seats }}
+            {% if is_driver %} · <a class="text-link" href="{{ chat_href(item.passenger_id, trip.id) }}">Написать</a>{% endif %}
+          </p>
+          {% if item.phone %}<p>Телефон: {{ item.phone }}</p>{% endif %}
+          {% if item.meeting %}<p class="muted">Встреча: {{ item.meeting }}</p>{% endif %}
+          {% if item.comment %}<p class="muted">{{ item.comment }}</p>{% endif %}
+          {% if item.status == 'rejected' %}<p>Причина отказа: {{ item.reject_reason }}</p>{% endif %}
+          {% if item.status == 'clarify' %}
+          <form method="post" class="pager">
+            <input type="hidden" name="csrf" value="{{ csrf }}">
+            <input type="hidden" name="booking_id" value="{{ item.id }}">
+            <button class="btn btn-primary" name="action" value="agree" type="submit"{% if not item.phone %} disabled{% endif %}>Согласовать</button>
+          </form>
+          {% endif %}
+          {% if item.status == 'plan' %}
+          <form method="post">
+            <input type="hidden" name="csrf" value="{{ csrf }}">
+            <input type="hidden" name="booking_id" value="{{ item.id }}">
+            <button class="btn btn-primary" name="action" value="plan_ok" type="submit">План верный</button>
+          </form>
+          {% endif %}
+          {% if item.status in ['clarify', 'plan'] %}
+          <form method="post" class="stack" style="margin-top: 8px;">
+            <input type="hidden" name="csrf" value="{{ csrf }}">
+            <input type="hidden" name="booking_id" value="{{ item.id }}">
+            <input type="hidden" name="action" value="reject">
+            <label class="field"><span>Причина отказа</span><input name="reason" placeholder="Не по пути"></label>
+            {% if errors.reason %}<small>{{ errors.reason }}</small>{% endif %}
+            <button class="btn btn-ghost" type="submit">Отказать</button>
+          </form>
+          {% endif %}
+        </article>
+      {% else %}
+        <p class="muted">Заявок нет.</p>
+      {% endfor %}
+    </section>
+    {% endif %}
+    {% if can_review %}
+    <section class="card" id="leave-review">
+      <h2>Оставить отзыв</h2>
+      <form class="stack" method="post" action="{{ url_for('trip_review', trip_id=trip.id) }}" style="margin-top: 12px;">
+        <input type="hidden" name="csrf" value="{{ csrf }}">
+        {% if review_targets|length == 1 %}
+          <input type="hidden" name="target_id" value="{{ review_targets[0].id }}">
+          <p class="muted">Кому: {{ review_targets[0].name }}</p>
+        {% else %}
+          <label class="field"><span>Кому</span>
+            <select name="target_id" required>
+              {% for person in review_targets %}
+              <option value="{{ person.id }}">{{ person.name }}</option>
+              {% endfor %}
+            </select>
+          </label>
+        {% endif %}
+        <fieldset class="star-input">
+          <legend>Оценка</legend>
+          {% for n in [5, 4, 3, 2, 1] %}
+          <input type="radio" name="rating" id="star-{{ n }}" value="{{ n }}" {% if n == 5 %}required{% endif %}>
+          <label for="star-{{ n }}">★</label>
+          {% endfor %}
+        </fieldset>
+        <label class="field"><span>Текст</span>
+          <textarea name="text" maxlength="1000" required></textarea>
+        </label>
+        <button class="btn btn-primary" type="submit">Отправить отзыв</button>
+      </form>
+    </section>
+    {% endif %}
+    <section class="card">
+      <h2>Пассажиры</h2>
+      {% for person in passengers %}
+        <p style="margin-top: 8px;">{{ person.name }} · {% if trip.status == 'cancelled' %}Отменено водителем{% else %}{{ person.status }}{% endif %}
+          {% if is_driver %} · <a class="text-link" href="{{ chat_href(person.passenger_id, trip.id) }}">Написать</a>{% endif %}
+        </p>
+      {% else %}
+        <p class="muted">Подтверждённых пассажиров пока нет.</p>
+      {% endfor %}
+      {% if me and not is_driver %}
+      <form method="post" class="stack" style="margin-top: 12px;">
+        <input type="hidden" name="csrf" value="{{ csrf }}">
+        <input type="hidden" name="action" value="complaint">
+        <label class="field"><span>Жалоба</span><textarea name="body"></textarea>
+          {% if errors.complaint %}<small>{{ errors.complaint }}</small>{% endif %}
+        </label>
+        <button class="btn btn-ghost" type="submit">Отправить жалобу</button>
+      </form>
+      {% endif %}
+    </section>
+  </div>
+</div>
+{% endblock %}

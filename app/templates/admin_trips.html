@@ -1,0 +1,66 @@
+{% extends "admin_base.html" %}
+{% block title %}ALONG — Поездки{% endblock %}
+{% block admin_heading %}Поездки{% endblock %}
+{% block admin_pill %}К списку{% endblock %}
+{% block admin %}
+<div class="admin-toolbar">
+  <div>
+    <p class="eyebrow">Все поездки, включая скрытые</p>
+    <form class="pager admin-filter" method="get">
+      <label class="field"><span>Статус</span>
+        <select name="status" onchange="this.form.submit()">
+          <option value="">все</option>
+          {% for item in ['open', 'hidden', 'cancelled'] %}
+          <option value="{{ item }}" {% if status == item %}selected{% endif %}>{{ item }}</option>
+          {% endfor %}
+        </select>
+      </label>
+    </form>
+  </div>
+  <div class="admin-toolbar__actions">
+    <a class="btn btn-ghost" href="{{ url_for('admin_trips_export', status=status) if status else url_for('admin_trips_export') }}">Экспорт CSV</a>
+    <a class="btn btn-primary" href="{{ url_for('admin_trip_new') }}">Создать поездку</a>
+  </div>
+</div>
+{% if not rows %}
+  <section class="card empty-state"><h2>{% if status %}Ничего не найдено{% else %}Поездок нет{% endif %}</h2>
+    {% if status %}<a class="btn btn-ghost" href="{{ url_for('admin_trips') }}">Сбросить фильтр</a>{% endif %}
+  </section>
+{% else %}
+<div class="admin-table-wrap">
+  <table class="admin-table">
+    <thead>
+      <tr>
+        <th>Когда</th>
+        <th>Маршрут</th>
+        <th>Водитель</th>
+        <th>Места</th>
+        <th>Статус</th>
+        <th>Действия</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for trip in rows %}
+      {% set badge, left, past = trip_meta(trip) %}
+      <tr>
+        <td data-label="Когда">{{ fmt_dt(trip.depart_at) }}</td>
+        <td data-label="Маршрут"><a class="text-link" href="{{ url_for('admin_trip_edit', trip_id=trip.id) }}">{{ trip.origin }} → {{ trip.destination }}</a></td>
+        <td data-label="Водитель">{{ trip.driver_name }}</td>
+        <td data-label="Места">{{ left }}/{{ trip.seats_total }}</td>
+        <td data-label="Статус"><span class="badge {% if badge == 'почти заполнено' %}badge-lime{% elif badge == 'есть места' %}badge-ok{% else %}badge-muted{% endif %}">{{ badge }}</span></td>
+        <td data-label="Действия" class="admin-actions">
+          <a class="text-link" href="{{ url_for('admin_trip_edit', trip_id=trip.id) }}">Изменить</a>
+          {% if trip.status == 'hidden' %}
+          <a class="text-link" href="{{ url_for('admin_trip_edit', trip_id=trip.id) }}#hide">Вернуть</a>
+          {% else %}
+          <a class="text-link" href="{{ url_for('admin_trip_edit', trip_id=trip.id) }}#hide">Скрыть</a>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% include "_pager.html" %}
+{% endif %}
+{% endblock %}

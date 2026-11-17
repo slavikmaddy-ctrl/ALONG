@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+{% block title %}ALONG — Профиль{% endblock %}
+{% block main %}
+<section class="page-hero page-hero--city">
+  <div class="page-hero__copy">
+    <h1>Кабинет</h1>
+    <a class="glass-pill" href="#cabinet">Мои данные</a>
+  </div>
+</section>
+<div class="page" id="cabinet">
+  <div class="container stack">
+    {% if not me.verified %}
+      <p class="note-bad">Почта ещё не подтверждена. Поиск открыт, а создание поездки и бронь ждут подтверждения.</p>
+      <a class="btn btn-ghost" href="{{ url_for('verify_wait') }}">Ссылка подтверждения</a>
+    {% endif %}
+    <section class="card">
+      <h2>Мой профиль</h2>
+      <form class="form-grid" method="post" style="margin-top: 12px;">
+        <input type="hidden" name="csrf" value="{{ csrf }}">
+        <label class="field {{ 'is-error' if errors.name else '' }}"><span>Имя</span><input name="name" value="{{ form_name }}">{% if errors.name %}<small>{{ errors.name }}</small>{% endif %}</label>
+        <label class="field {{ 'is-error' if errors.city else '' }}"><span>Город</span>
+          <input name="city" value="{{ form_city }}" list="cities">
+          <datalist id="cities">{% for city in cities %}<option value="{{ city.name }}">{% endfor %}</datalist>
+          {% if errors.city %}<small>{{ errors.city }}</small>{% endif %}
+        </label>
+        <label class="field {{ 'is-error' if errors.phone else '' }}"><span>Телефон</span><input name="phone" value="{{ form_phone }}" placeholder="+79000000000">{% if errors.phone %}<small>{{ errors.phone }}</small>{% endif %}</label>
+        <label class="field"><span>Машина</span><input name="car" value="{{ form_car }}"></label>
+        <label class="field is-wide"><span>О себе</span><textarea name="about">{{ form_about }}</textarea></label>
+        <button class="btn btn-primary" type="submit">Сохранить</button>
+      </form>
+    </section>
+    {% if me.driver_status == 'approved' %}
+    <section class="card">
+      <h2>Статус водителя</h2>
+      <p>Вы можете публиковать поездки.</p>
+      <button class="btn btn-ghost" type="button" data-open-dialog="resign-dialog">Отказаться от статуса водителя</button>
+    </section>
+    <dialog id="resign-dialog" class="along-dialog">
+      <form class="stack" method="post" action="{{ url_for('driver_resign') }}">
+        <h2>Отказ от статуса водителя</h2>
+        <input type="hidden" name="csrf" value="{{ csrf }}">
+        <label class="field"><span>ФИО</span><input name="full_name" value="{{ me.name }}" maxlength="200" required></label>
+        <label class="field"><span>Email</span><input name="email" value="{{ me.email }}" readonly></label>
+        <label class="field"><span>Причина ухода</span><textarea name="reason" maxlength="1000" required></textarea></label>
+        <button class="btn btn-primary" type="submit">Отправить заявку</button>
+        <button class="btn btn-ghost" type="button" data-close-dialog>Закрыть</button>
+      </form>
+    </dialog>
+    {% elif me.driver_status == 'pending' %}
+    <section class="card">
+      <h2>Статус водителя</h2>
+      <p class="muted">Заявка на статус водителя ещё не подтверждена администратором.</p>
+    </section>
+    {% elif me.driver_status == 'pending_resignation' %}
+    <section class="card">
+      <h2>Статус водителя</h2>
+      <p class="muted">Заявка на отказ отправлена и ждёт решения администратора.</p>
+    </section>
+    {% elif me.driver_status == 'rejected' %}
+    <section class="card">
+      <h2>Статус водителя</h2>
+      <p class="muted">Заявка на статус водителя отклонена.</p>
+    </section>
+    {% endif %}
+    {% if resign_sent %}
+    <dialog id="resign-sent" class="along-dialog">
+      <p>Ваша заявка отправлена. Администратор рассмотрит её и примет решение. Будьте на связи, возможно, мы свяжемся с вами для уточнения деталей</p>
+      <button class="btn btn-primary" type="button" data-close-dialog>Закрыть</button>
+    </dialog>
+    {% endif %}
+    <section class="card">
+      <h2>Мои поездки</h2>
+      {% for trip in mine %}
+        {% set badge, left, past = trip_meta(trip) %}
+        <p style="margin-top: 8px;"><a class="text-link" href="{{ url_for('trip_page', trip_id=trip.id) }}">{{ fmt_dt(trip.depart_at) }} · {{ trip.origin }} → {{ trip.destination }}</a> · {% if trip.status == 'cancelled' %}Отменено водителем{% else %}{{ badge }}{% endif %}</p>
+      {% else %}
+        <p>Вы ещё не создали поездку. <a class="text-link" href="{{ url_for('new_trip') }}">Создать поездку</a></p>
+      {% endfor %}
+    </section>
+    <section class="card">
+      <h2>Мои заявки</h2>
+      {% for item in bookings %}
+        <p style="margin-top: 8px;"><a class="text-link" href="{{ url_for('trip_page', trip_id=item.trip_id) }}">{{ item.origin }} → {{ item.destination }}</a> · {% if item.trip_status == 'cancelled' %}Отменено водителем{% else %}{{ item.status }}{% endif %}</p>
+      {% else %}
+        <p>Заявок нет. <a class="text-link" href="{{ url_for('trips') }}">Найти попутчика</a></p>
+      {% endfor %}
+    </section>
+    <section class="card">
+      <h2>{% if me.driver_status == 'approved' %}Предложения пассажиров{% else %}Мои предложения цены{% endif %}</h2>
+      {% for item in offers %}
+        <p style="margin-top: 8px;">Ищу попутчика, предлагаю {{ item.offer_price }} руб. {{ item.origin }} → {{ item.destination }}. Заявка от {{ item.created_at }}</p>
+      {% else %}
+        <p class="muted">{% if me.driver_status == 'approved' %}Заявок пока нет.{% else %}Своих предложений цены нет.{% endif %}</p>
+      {% endfor %}
+    </section>
+    <section class="card">
+      <h2>Сохранённые маршруты</h2>
+      {% for route in routes %}
+        <p style="margin-top: 8px;">{{ route.origin }} → {{ route.destination }}
+          · <a class="text-link" href="{{ url_for('trips', **{'from': route.origin, 'to': route.destination}) }}">Найти попутчика</a>
+          · <a class="text-link" href="{{ url_for('new_trip', **{'from': route.origin, 'to': route.destination}) }}">Создать поездку</a>
+        </p>
+      {% else %}
+        <p class="muted">Сохранённых маршрутов нет.</p>
+      {% endfor %}
+    </section>
+    <section class="card">
+      <h2>Мои обращения</h2>
+      {% for item in complaints %}
+        <p style="margin-top: 8px;">{{ item.body }} · {% if item.status == 'done' %}разобрано{% else %}на проверке{% endif %}</p>
+      {% else %}
+        <p class="muted">Обращений нет.</p>
+      {% endfor %}
+    </section>
+  </div>
+</div>
+{% endblock %}

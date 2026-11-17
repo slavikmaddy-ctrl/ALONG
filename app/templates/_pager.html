@@ -1,0 +1,14 @@
+{% if pages and pages > 1 %}
+{% set query = request.args.to_dict(flat=True) %}
+<nav class="pager admin-pager" aria-label="Страницы списка">
+  {% if page > 1 %}
+    {% set _ = query.update({'page': page - 1}) %}
+    <a class="btn btn-ghost" href="{{ url_for(request.endpoint, **query) }}">Назад</a>
+  {% endif %}
+  <span class="muted">Страница {{ page }} из {{ pages }}{% if total %} · всего {{ total }}{% endif %}</span>
+  {% if page < pages %}
+    {% set _ = query.update({'page': page + 1}) %}
+    <a class="btn btn-ghost" href="{{ url_for(request.endpoint, **query) }}">Вперёд</a>
+  {% endif %}
+</nav>
+{% endif %}

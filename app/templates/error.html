@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}ALONG — {{ code }}{% endblock %}
+{% block main %}
+<section class="page-hero page-hero--evening">
+  <div class="page-hero__copy">
+    <h1>{{ text }}</h1>
+    <a class="glass-pill" href="{{ url_for('home') }}">На главную</a>
+  </div>
+</section>
+<div class="page"><div class="container" style="max-width: 640px;">
+  <section class="card">
+    <p class="kicker">{{ code }}</p>
+    <p class="lede">{{ text }}</p>
+    <a class="btn btn-primary" href="{{ url_for('home') }}">На главную</a>
+  </section>
+</div></div>
+{% endblock %}

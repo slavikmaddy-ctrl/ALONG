@@ -1,0 +1,39 @@
+{% extends "admin_base.html" %}
+{% block title %}ALONG — Поездка{% endblock %}
+{% block admin_heading %}{% if trip %}Изменить поездку{% else %}Новая поездка{% endif %}{% endblock %}
+{% block admin_pill %}К форме{% endblock %}
+{% block admin %}
+{% if errors.form %}<p class="note-bad">{{ errors.form }}</p>{% endif %}
+<form class="card form-grid" method="post">
+  <input type="hidden" name="csrf" value="{{ csrf }}">
+  <label class="field {{ 'is-error' if errors['from'] else '' }}"><span>Откуда</span><input name="from" value="{{ form['from'] }}" list="cities">{% if errors['from'] %}<small>{{ errors['from'] }}</small>{% endif %}</label>
+  <label class="field {{ 'is-error' if errors.to else '' }}"><span>Куда</span><input name="to" value="{{ form.to }}" list="cities">{% if errors.to %}<small>{{ errors.to }}</small>{% endif %}</label>
+  <label class="field {{ 'is-error' if errors.date else '' }}"><span>Дата</span><input type="date" name="date" value="{{ form.date }}">{% if errors.date %}<small>{{ errors.date }}</small>{% endif %}</label>
+  <label class="field {{ 'is-error' if errors.time else '' }}"><span>Время</span><input type="time" name="time" value="{{ form.time }}">{% if errors.time %}<small>{{ errors.time }}</small>{% endif %}</label>
+  <label class="field {{ 'is-error' if errors.price else '' }}"><span>Цена</span><input name="price" value="{{ form.price }}">{% if errors.price %}<small>{{ errors.price }}</small>{% endif %}</label>
+  <label class="field {{ 'is-error' if errors.seats else '' }}"><span>Мест всего</span><input name="seats" value="{{ form.seats }}">{% if errors.seats %}<small>{{ errors.seats }}</small>{% endif %}</label>
+  <label class="field"><span>Посадка</span><input name="pickup" value="{{ form.pickup }}"></label>
+  <label class="field {{ 'is-error' if errors.driver else '' }}"><span>Водитель</span>
+    <select name="driver_id">
+      <option value="">выберите</option>
+      {% for driver in drivers %}
+      <option value="{{ driver.id }}" {% if form.driver_id == driver.id|string %}selected{% endif %}>{{ driver.name }}</option>
+      {% endfor %}
+    </select>
+    {% if errors.driver %}<small>{{ errors.driver }}</small>{% endif %}
+  </label>
+  <datalist id="cities">{% for city in cities %}<option value="{{ city.name }}">{% endfor %}</datalist>
+  <button class="btn btn-primary" name="action" value="save" type="submit">Сохранить</button>
+</form>
+{% if trip %}
+<form id="hide" class="card stack" method="post" style="margin-top: 12px;">
+  <input type="hidden" name="csrf" value="{{ csrf }}">
+  {% if trip.status == 'hidden' %}
+    <button class="btn btn-primary" name="action" value="restore" type="submit">Вернуть в поиск</button>
+  {% else %}
+    <label class="field {{ 'is-error' if errors.reason else '' }}"><span>Причина скрытия</span><input name="reason" value="{{ form.reason }}">{% if errors.reason %}<small>{{ errors.reason }}</small>{% endif %}</label>
+    <button class="btn btn-ghost" name="action" value="hide" type="submit">Скрыть</button>
+  {% endif %}
+</form>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}ALONG — {{ person.name }}{% endblock %}
+{% block main %}
+<section class="page-hero page-hero--city">
+  <div class="page-hero__copy">
+    <h1>{{ person.name }}</h1>
+    <a class="glass-pill" href="#about-person">О попутчике</a>
+  </div>
+</section>
+<div class="page" id="about-person">
+  <div class="container profile-layout">
+    <aside class="card">
+      <img class="profile-photo" src="{{ url_for('media', name=person.photo or 'city.jpg') }}" alt="{{ person.name }}">
+      <h2 style="margin-top: 10px;">{{ person.name }}</h2>
+      {% if person.driver_status == 'approved' %}
+      <p class="driver-badge">Проверенный водитель</p>
+      {% endif %}
+      <p class="review-stars profile-stars" aria-label="Рейтинг {{ person.rating }} из 5">
+        {% for star in range(1, 6) %}
+        <span class="{{ 'is-on' if star <= star_fill else '' }}">★</span>
+        {% endfor %}
+      </p>
+      <p class="muted">{{ person.rating }} · {{ completed_trips }} завершённых поездок · {{ person.city }}</p>
+      {% if person.car %}
+      <figure class="car-shot">
+        <img src="{{ url_for('media', name='car.jpg') }}" alt="Городская машина днём">
+        <figcaption>{{ person.car }}</figcaption>
+      </figure>
+      {% endif %}
+      <p class="muted" style="margin-top: 8px;">Почта и телефон на этой странице скрыты.</p>
+    </aside>
+    <div class="stack">
+      <section class="card">
+        <h2>О попутчике</h2>
+        <p>{{ person.about or 'Текст пока не заполнен.' }}</p>
+      </section>
+      <section class="card">
+        <h2>Отзывы</h2>
+        <div class="reviews">
+          {% for review in reviews %}
+          <article class="review-card">
+            <p class="review-card__author">{{ review.name }}</p>
+            <p class="review-stars" aria-label="Оценка {{ review.rating }} из 5">
+              {% for star in range(1, 6) %}
+              <span class="{{ 'is-on' if star <= review.rating else '' }}">★</span>
+              {% endfor %}
+            </p>
+            <p>{{ review.text }}</p>
+            <p class="muted">{{ fmt_ts(review.created_at) }}</p>
+          </article>
+          {% else %}
+          <p>Отзывов нет.</p>
+          {% endfor %}
+        </div>
+      </section>
+      <section class="card">
+        <h2>Ближайшие поездки</h2>
+        {% for trip in upcoming %}
+          <p style="margin-top: 8px;"><a class="text-link" href="{{ url_for('trip_page', trip_id=trip.id) }}">{{ fmt_dt(trip.depart_at) }} · {{ trip.origin }} → {{ trip.destination }}</a></p>
+        {% else %}
+          <p>Открытых поездок нет.</p>
+        {% endfor %}
+      </section>
+    </div>
+  </div>
+</div>
+{% endblock %}

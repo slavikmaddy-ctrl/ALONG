@@ -1,0 +1,49 @@
+{% extends "admin_base.html" %}
+{% block title %}ALONG — Обзор{% endblock %}
+{% block admin_heading %}Обзор{% endblock %}
+{% block admin_pill %}К сводке{% endblock %}
+{% block admin %}
+<p class="eyebrow">Панель сотрудника</p>
+<section class="admin-stats" aria-label="Сводка">
+  <article class="admin-stat">
+    <svg class="admin-stat__icon" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M4 16h2l1.2-3.2A2 2 0 0 1 9.1 11h5.8a2 2 0 0 1 1.9 1.4L18 16h2v2h-1.1a2.5 2.5 0 0 1-4.8 0H9.9a2.5 2.5 0 0 1-4.8 0H4v-2zm3.5 3a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm9 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2zM8.2 14h7.6l-.7-1.8a.5.5 0 0 0-.5-.4H9.4a.5.5 0 0 0-.5.4L8.2 14z"/>
+    </svg>
+    <p>Поездок за 7 дней</p>
+    <strong>{{ stats.trips }}</strong>
+  </article>
+  <article class="admin-stat">
+    <svg class="admin-stat__icon" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M12 3a9 9 0 1 0 9 9h-2a7 7 0 1 1-7-7V3zm1 5h-2v6l4.5 2.7 1-1.7-3.5-2.1V8z"/>
+    </svg>
+    <p>Ждут уточнения</p>
+    <strong>{{ stats.clarify }}</strong>
+  </article>
+  <article class="admin-stat">
+    <svg class="admin-stat__icon" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M9 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7zm6.5 1a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM2.5 20a6.5 6.5 0 0 1 13 0H2.5zm12.2 0a5.5 5.5 0 0 1 6.8 0h-6.8z"/>
+    </svg>
+    <p>Профилей</p>
+    <strong>{{ stats.users }}</strong>
+  </article>
+  <article class="admin-stat">
+    <svg class="admin-stat__icon" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M6 3h9l5 5v13a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1zm8 1.5V9h4.5L14 4.5zM8 12h8v1.6H8V12zm0 3.4h8V17H8v-1.6z"/>
+    </svg>
+    <p>Жалоб в работе</p>
+    <strong>{{ stats.complaints }}</strong>
+  </article>
+</section>
+<section class="card admin-chart" aria-label="Поездки за 7 дней">
+  <h2>Поездки за 7 дней</h2>
+  <div class="bars">
+    {% for item in chart %}
+    <div class="bar-col">
+      <span class="bar-value">{{ item.count }}</span>
+      <span class="bar" style="height: {% if chart_max %}{{ (item.count / chart_max * 100)|round(0, 'floor') }}{% else %}0{% endif %}%"></span>
+      <span class="bar-label">{{ item.label }}</span>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "figsor": {
+      "command": "npx",
+      "args": ["-y", "figsor"]
+    }
+  }
+}

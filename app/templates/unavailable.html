@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}ALONG{% endblock %}
+{% block main %}
+<section class="page-hero page-hero--road">
+  <div class="page-hero__copy">
+    <h1>{% if kind == 'profile' %}Профиль недоступен{% else %}Поездка недоступна{% endif %}</h1>
+    <a class="glass-pill" href="{{ url_for('trips') }}">К поездкам</a>
+  </div>
+</section>
+<div class="page"><div class="container" style="max-width: 640px;">
+  <section class="card">
+    {% if kind == 'profile' %}
+      <h2>Профиль недоступен</h2>
+    {% else %}
+      <h2>Поездка недоступна</h2>
+      <p class="lede"><a class="text-link" href="{{ url_for('trips') }}">Вернуться к поиску</a></p>
+    {% endif %}
+  </section>
+</div></div>
+{% endblock %}

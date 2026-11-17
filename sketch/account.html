@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ALONG — Вход и регистрация</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip" href="#content">К содержанию</a>
+  <header class="site-header">
+    <div class="container header-bar">
+      <a class="logo" href="index.html"><span class="logo-mark" aria-hidden="true"><i></i><i></i></span>ALONG</a>
+      <button class="btn btn-ghost nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="site-nav">Меню</button>
+      <nav id="site-nav" class="site-nav" data-nav aria-label="Основное меню">
+        <a href="index.html">Главная</a>
+        <a href="trips.html">Поездки</a>
+        <a href="schedule.html">Расписание</a>
+        <a href="profile.html">Профиль</a>
+        <a class="btn btn-nav" href="account.html" aria-current="page">Войти</a>
+      </nav>
+    </div>
+  </header>
+  <main id="content" class="page">
+    <div class="container">
+      <h1>Вход и регистрация</h1>
+      <p class="lede">Два состояния одного экрана. Слева — ошибка в почте, справа — пример успешной регистрации. Аккаунт не создаётся.</p>
+      <div class="account-layout">
+        <figure class="account-visual">
+          <img src="images/share.jpg" alt="Жёлтый фургон на стоянке днём" width="900" height="1200">
+          <figcaption>Собрались и поехали в одну сторону</figcaption>
+        </figure>
+        <div class="account-grid">
+        <section class="card">
+          <h2>Вход</h2>
+          <p class="muted" style="margin: 6px 0 14px;">Для тех, кто уже ездит с ALONG.</p>
+          <form class="stack" action="#" method="post">
+            <label class="field is-error">
+              <span>Почта</span>
+              <input type="text" value="alina@" aria-invalid="true" aria-describedby="mail-error" autocomplete="off">
+              <small id="mail-error" role="alert">В адресе не хватает домена. Напишите почту целиком, например alina@example.com.</small>
+            </label>
+            <label class="field">
+              <span>Пароль</span>
+              <input type="password" value="password" autocomplete="off">
+              <small>Не меньше 8 символов.</small>
+            </label>
+            <button class="btn btn-primary" type="button">Войти</button>
+          </form>
+        </section>
+        <section class="card">
+          <h2>Регистрация</h2>
+          <p class="muted" style="margin: 6px 0 14px;">Новый профиль попутчика в Казани.</p>
+          <div class="note-ok">
+            <strong>Готово.</strong> Профиль Дины Каримовой создан. Ссылка для входа показана как отправленная на dina.k@example.com. Это пример экрана: письмо никуда не уходит.
+          </div>
+          <form class="stack" action="#" method="post">
+            <label class="field">
+              <span>Имя</span>
+              <input value="Дина Каримова" autocomplete="name">
+            </label>
+            <label class="field">
+              <span>Почта</span>
+              <input type="text" value="dina.k@example.com" autocomplete="off">
+            </label>
+            <label class="field">
+              <span>Город</span>
+              <input value="Казань" autocomplete="off">
+            </label>
+            <button class="btn btn-primary" type="button">Создать профиль</button>
+          </form>
+        </section>
+        </div>
+      </div>
+    </div>
+  </main>
+  <footer class="site-footer">
+    <div class="container footer-grid">
+      <div>
+        <strong>ALONG</strong>
+        <p>Попутчики по России и соседним странам. Макет интерфейса: имена, машины и рейсы вымышлены.</p>
+      </div>
+      <nav class="footer-links" aria-label="Страницы макета">
+        <a href="index.html">Главная</a>
+        <a href="trips.html">Поездки</a>
+        <a href="trip.html">Карточка поездки</a>
+        <a href="schedule.html">Расписание</a>
+        <a href="profile.html">Профиль</a>
+        <a href="account.html">Вход</a>
+        <a href="admin.html">Для сотрудников</a>
+      </nav>
+    </div>
+  </footer>
+  <script src="app.js"></script>
+</body>
+</html>

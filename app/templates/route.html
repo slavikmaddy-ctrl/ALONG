@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block title %}ALONG — Маршрут{% endblock %}
+{% block head_extra %}<link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet">{% endblock %}
+{% block main %}
+<section class="page-hero page-hero--evening">
+  <div class="page-hero__copy">
+    <h1>{% if origin and dest %}{{ origin.name }} → {{ dest.name }}{% else %}Точки маршрута{% endif %}</h1>
+    <a class="glass-pill" href="#route-panel">К карте</a>
+  </div>
+</section>
+<div class="page"><div class="container stack">
+  <section class="card" id="route-panel">
+    <p class="kicker">Маршрут</p>
+    {% if error %}
+      <p class="note-bad">{{ error }}</p>
+    {% elif origin and dest %}
+      <p>Около {{ km }} км по прямой, примерно {{ hours }} ч в пути. Линия на карте OpenStreetMap соединяет выбранные города.</p>
+      <div id="route-map" class="route-map" data-from-lon="{{ origin.lon }}" data-from-lat="{{ origin.lat }}" data-to-lon="{{ dest.lon }}" data-to-lat="{{ dest.lat }}"></div>
+    {% endif %}
+    {% if me and origin and dest and not error %}
+    <form method="post" action="{{ url_for('save_route') }}">
+      <input type="hidden" name="csrf" value="{{ csrf }}">
+      <input type="hidden" name="from" value="{{ origin.name }}">
+      <input type="hidden" name="to" value="{{ dest.name }}">
+      <input type="hidden" name="from_lat" value="{{ origin.lat }}">
+      <input type="hidden" name="from_lon" value="{{ origin.lon }}">
+      <input type="hidden" name="to_lat" value="{{ dest.lat }}">
+      <input type="hidden" name="to_lon" value="{{ dest.lon }}">
+      <button class="btn btn-primary" type="submit">Сохранить маршрут</button>
+    </form>
+    {% elif origin and dest and not error %}
+      <a class="btn btn-primary" href="{{ url_for('login', next=request.full_path) }}">Сохранить маршрут</a>
+    {% endif %}
+  </section>
+  <section class="card">
+    <h2>Поездки рядом</h2>
+    {% for trip in trips %}
+      <p style="margin-top: 8px;"><a class="text-link" href="{{ url_for('trip_page', trip_id=trip.id) }}">{{ fmt_dt(trip.depart_at) }} · {{ trip.origin }} → {{ trip.destination }}</a> · {{ trip.driver_name }}</p>
+    {% else %}
+      <p class="muted">Открытых поездок по этим точкам нет.</p>
+    {% endfor %}
+  </section>
+</div></div>
+{% endblock %}
+{% block scripts %}
+<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+<script>
+(function () {
+  var box = document.getElementById("route-map");
+  if (!box || !window.maplibregl) return;
+  var a = [parseFloat(box.dataset.fromLon), parseFloat(box.dataset.fromLat)];
+  var b = [parseFloat(box.dataset.toLon), parseFloat(box.dataset.toLat)];
+  if ([a[0], a[1], b[0], b[1]].some(function (n) { return isNaN(n); })) return;
+  var map = new maplibregl.Map({
+    container: box,
+    style: "https://tiles.openfreemap.org/styles/dark",
+    center: [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2],
+    zoom: 4
+  });
+  map.on("load", function () {
+    [a, b].forEach(function (coord) {
+      var el = document.createElement("div");
+      el.className = "along-pin";
+      new maplibregl.Marker({ element: el }).setLngLat(coord).addTo(map);
+    });
+    map.addSource("along-route", {
+      type: "geojson",
+      data: { type: "Feature", geometry: { type: "LineString", coordinates: [a, b] } }
+    });
+    map.addLayer({ id: "along-route", type: "line", source: "along-route", paint: { "line-color": "#ff9f12", "line-width": 4 } });
+    map.fitBounds([a, b], { padding: 48 });
+  });
+})();
+</script>
+{% endblock %}

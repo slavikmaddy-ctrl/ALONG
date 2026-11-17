@@ -1,0 +1,36 @@
+{% extends "admin_base.html" %}
+{% block title %}ALONG — Журнал{% endblock %}
+{% block admin_heading %}Журнал действий{% endblock %}
+{% block admin_pill %}К журналу{% endblock %}
+{% block admin %}
+<p class="eyebrow">Кто и что менял в панели</p>
+{% if not rows %}
+  <section class="card empty-state"><h2>Записей нет</h2></section>
+{% else %}
+<div class="admin-table-wrap">
+  <table class="admin-table">
+    <thead>
+      <tr>
+        <th>Когда</th>
+        <th>Администратор</th>
+        <th>Действие</th>
+        <th>Объект</th>
+        <th>Подробности</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in rows %}
+      <tr>
+        <td data-label="Когда">{{ fmt_ts(item.created_at) }}</td>
+        <td data-label="Администратор">{% if item.admin_name %}{{ item.admin_name }}{% else %}—{% endif %}</td>
+        <td data-label="Действие">{{ item.action }}</td>
+        <td data-label="Объект">{{ item.entity }}{% if item.entity_id %} #{{ item.entity_id }}{% endif %}</td>
+        <td data-label="Подробности">{% if item.details %}{{ item.details }}{% else %}—{% endif %}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% include "_pager.html" %}
+{% endif %}
+{% endblock %}

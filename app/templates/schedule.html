@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block title %}ALONG — Расписание{% endblock %}
+{% block main %}
+<section class="page-hero page-hero--station schedule-hero">
+  <div class="page-hero__copy">
+    <h1>Автобусы, самолёты и поезда</h1>
+    <a class="glass-pill" href="#timetable">К рейсам</a>
+  </div>
+</section>
+<div class="page" id="timetable">
+  <div class="container stack">
+    <section class="card filter-card">
+      <p class="eyebrow">Справка</p>
+      <p class="lede">Место в рейсе через ALONG не бронируется. Это справочник.</p>
+      <div class="mode-switch" role="tablist" aria-label="Вид транспорта">
+        {% for item, label in [('bus', 'Автобус'), ('plane', 'Самолёт'), ('train', 'Поезд')] %}
+        <a class="mode-switch__tab {% if mode == item %}is-on{% endif %}" href="{{ url_for('schedule', mode=item, **{'from': origin, 'to': dest, 'date': date}) }}" {% if mode == item %}aria-current="page"{% endif %}>{{ label }}</a>
+        {% endfor %}
+      </div>
+      <form class="filters" method="get">
+        <input type="hidden" name="mode" value="{{ mode }}">
+        <label class="field"><span>Откуда</span><input id="sched-from" name="from" value="{{ origin }}"></label>
+        <label class="field"><span>Куда</span><input id="sched-to" name="to" value="{{ dest }}"></label>
+        <div class="field along-cal-field">
+          <span>Дата</span>
+          <input id="schedule-date" type="hidden" name="date" value="{{ date }}">
+          <div class="along-cal" data-calendar data-input="schedule-date" data-endpoint="/api/schedule-days" data-from="sched-from" data-to="sched-to" data-mode="{{ mode }}" data-days-id="schedule-days" data-submit="1" data-blank="Когда есть рейсы"></div>
+          <script type="application/json" id="schedule-days">{{ schedule_days|tojson }}</script>
+        </div>
+        <button class="btn btn-primary" type="submit">Показать</button>
+      </form>
+    </section>
+    <section class="card schedule-board {% if rows and date and not date_error and not failed %}schedule-board--list{% endif %}">
+      {% if failed %}
+        <p>Не удалось загрузить расписание.</p>
+        <a class="btn btn-ghost" href="{{ url_for('schedule', mode=mode, **{'from': origin, 'to': dest, 'date': date}) }}">Повторить</a>
+      {% elif not date or date_error %}
+        <div class="schedule-empty" role="status">
+          <span class="schedule-empty__icon" aria-hidden="true">
+            <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
+              <rect x="5" y="7" width="26" height="23" rx="5" stroke="currentColor" stroke-width="1.6"></rect>
+              <path d="M5 14.5h26M12 4.5v5M24 4.5v5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"></path>
+            </svg>
+          </span>
+          {% if date_error %}
+          <p class="schedule-empty__title">Эта дата не подходит</p>
+          <p class="muted">Нужен сегодняшний день или один из следующих.</p>
+          {% else %}
+          <p class="schedule-empty__title">Дата не выбрана</p>
+          <p class="muted">Укажите день в фильтре — здесь появятся рейсы.</p>
+          {% endif %}
+        </div>
+      {% elif not rows %}
+        <h2>На эту дату рейсов нет</h2>
+        {% if neighbors %}
+          <div class="pager">
+            {% for item in neighbors %}
+            <a class="btn btn-ghost" href="{{ url_for('schedule', mode=mode, date=item.day, **{'from': origin, 'to': dest}) }}">{{ item.day }}</a>
+            {% endfor %}
+          </div>
+        {% endif %}
+      {% else %}
+        <ul class="rides">
+          {% for row in rows %}
+          <li class="ride-item">
+            <span class="t">{{ row.depart_at[11:16] }}{% if row.leg2_at %} / {{ row.leg2_at[11:16] }}{% endif %}</span>
+            <span class="ride-route">
+              <strong>{{ row.title }}</strong>
+              {% if row.via %}
+              <small>Первое плечо: {{ row.origin }} → {{ row.via }}, отправление {{ row.depart_at[11:16] }}</small>
+              <small>Пересадка {{ row.layover_min }} мин</small>
+              <small>Второе плечо: {{ row.via }} → {{ row.destination }}{% if row.leg2_at %}, отправление {{ row.leg2_at[11:16] }}{% endif %}</small>
+              {% else %}
+              <small>{{ row.origin }} → {{ row.destination }}</small>
+              {% endif %}
+            </span>
+            {% if row.via %}<span class="badge badge-lime">с пересадкой</span>{% endif %}
+            <span class="badge {% if row.sold_out %}badge-lime{% else %}badge-ok{% endif %}">{% if row.sold_out %}мест нет{% else %}есть места{% endif %}</span>
+          </li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    </section>
+  </div>
+</div>
+{% endblock %}

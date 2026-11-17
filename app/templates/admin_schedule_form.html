@@ -1,0 +1,46 @@
+{% extends "admin_base.html" %}
+{% block title %}ALONG — Рейс{% endblock %}
+{% block admin_heading %}{% if item %}Изменить рейс{% else %}Новый рейс{% endif %}{% endblock %}
+{% block admin_pill %}К расписанию{% endblock %}
+{% block admin %}
+<p><a class="text-link" href="{{ url_for('admin_schedules') }}">← К расписанию</a></p>
+{% if errors.form %}<p class="note-bad">{{ errors.form }}</p>{% endif %}
+<form class="card form-grid" method="post">
+  <input type="hidden" name="csrf" value="{{ csrf }}">
+  <label class="field {{ 'is-error' if errors.mode else '' }}"><span>Вид транспорта</span>
+    <select name="mode">
+      {% for value, label in [('bus', 'Автобус'), ('plane', 'Самолёт'), ('train', 'Поезд')] %}
+      <option value="{{ value }}" {% if form.mode == value %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+    {% if errors.mode %}<small>{{ errors.mode }}</small>{% endif %}
+  </label>
+  <label class="field {{ 'is-error' if errors['from'] else '' }}"><span>Откуда</span><input name="from" value="{{ form['from'] }}" list="cities">{% if errors['from'] %}<small>{{ errors['from'] }}</small>{% endif %}</label>
+  <label class="field {{ 'is-error' if errors.to else '' }}"><span>Куда</span><input name="to" value="{{ form.to }}" list="cities">{% if errors.to %}<small>{{ errors.to }}</small>{% endif %}</label>
+  <label class="field {{ 'is-error' if errors.date else '' }}"><span>Дата</span><input type="date" name="date" value="{{ form.date }}">{% if errors.date %}<small>{{ errors.date }}</small>{% endif %}</label>
+  <label class="field {{ 'is-error' if errors.time else '' }}"><span>Время отправления</span><input type="time" name="time" value="{{ form.time }}">{% if errors.time %}<small>{{ errors.time }}</small>{% endif %}</label>
+  <label class="field {{ 'is-error' if errors.title else '' }}"><span>Название рейса</span><input name="title" value="{{ form.title }}" maxlength="120">{% if errors.title %}<small>{{ errors.title }}</small>{% endif %}</label>
+  <label class="field {{ 'is-error' if errors.via else '' }}"><span>Пересадка (необязательно)</span>
+    <select name="via">
+      <option value="">без пересадки</option>
+      {% for city in cities %}
+      <option value="{{ city.name }}" {% if form.via == city.name %}selected{% endif %}>{{ city.name }}</option>
+      {% endfor %}
+    </select>
+    {% if errors.via %}<small>{{ errors.via }}</small>{% endif %}
+  </label>
+  <label class="field {{ 'is-error' if errors.leg2_time else '' }}"><span>Начало второго участка</span><input type="time" name="leg2_time" value="{{ form.leg2_time }}">{% if errors.leg2_time %}<small>{{ errors.leg2_time }}</small>{% endif %}</label>
+  <label class="field field-check">
+    <span>Билеты</span>
+    <label class="check-line"><input type="checkbox" name="sold_out" value="1" {% if form.sold_out %}checked{% endif %}> Мест нет</label>
+  </label>
+  <datalist id="cities">{% for city in cities %}<option value="{{ city.name }}">{% endfor %}</datalist>
+  <button class="btn btn-primary" type="submit">Сохранить</button>
+</form>
+{% if item %}
+<form method="post" action="{{ url_for('admin_schedule_delete', item_id=item.id) }}" style="margin-top: 12px;" onsubmit="return confirm('Удалить рейс?');">
+  <input type="hidden" name="csrf" value="{{ csrf }}">
+  <button class="btn btn-ghost" type="submit">Удалить рейс</button>
+</form>
+{% endif %}
+{% endblock %}

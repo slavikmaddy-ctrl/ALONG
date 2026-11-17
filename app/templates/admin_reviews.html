@@ -1,0 +1,65 @@
+{% extends "admin_base.html" %}
+{% block title %}ALONG — Отзывы{% endblock %}
+{% block admin_heading %}Отзывы{% endblock %}
+{% block admin_pill %}К отзывам{% endblock %}
+{% block admin %}
+<div class="admin-toolbar">
+  <div>
+    <p class="eyebrow">Модерация отзывов</p>
+    <form class="pager admin-filter" method="get">
+      <label class="field"><span>Оценка</span>
+        <select name="rating" onchange="this.form.submit()">
+          <option value="">любая</option>
+          {% for n in [5, 4, 3, 2, 1] %}
+          <option value="{{ n }}" {% if rating == n|string %}selected{% endif %}>{{ n }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <label class="field"><span>Поиск</span><input name="q" value="{{ query }}" placeholder="текст, автор, получатель"></label>
+      <button class="btn btn-ghost" type="submit">Найти</button>
+    </form>
+  </div>
+</div>
+{% if not rows %}
+  <section class="card empty-state"><h2>Отзывов нет</h2></section>
+{% else %}
+<div class="admin-table-wrap">
+  <table class="admin-table">
+    <thead>
+      <tr>
+        <th>Когда</th>
+        <th>Автор</th>
+        <th>Кому</th>
+        <th>Поездка</th>
+        <th>Оценка</th>
+        <th>Текст</th>
+        <th>Действия</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in rows %}
+      <tr>
+        <td data-label="Когда">{{ fmt_ts(item.created_at) }}</td>
+        <td data-label="Автор">{{ item.author_name }}</td>
+        <td data-label="Кому">{% if item.target_name %}{{ item.target_name }}{% else %}—{% endif %}</td>
+        <td data-label="Поездка">
+          {% if item.trip_id %}
+          <a class="text-link" href="{{ url_for('trip_page', trip_id=item.trip_id) }}">{{ item.origin }} → {{ item.destination }}</a>
+          {% else %}—{% endif %}
+        </td>
+        <td data-label="Оценка">{{ item.rating }}</td>
+        <td data-label="Текст">{{ item.text }}</td>
+        <td data-label="Действия" class="admin-actions">
+          <form method="post" action="{{ url_for('admin_review_delete', review_id=item.id) }}" onsubmit="return confirm('Удалить отзыв?');">
+            <input type="hidden" name="csrf" value="{{ csrf }}">
+            <button class="text-link" type="submit">Удалить</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% include "_pager.html" %}
+{% endif %}
+{% endblock %}

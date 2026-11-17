@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block body_class %}is-admin{% endblock %}
+{% block main %}
+<div class="admin-app" id="admin-panel">
+  <div class="admin-wrap">
+    <header class="admin-head">
+      <h1>{% block admin_heading %}Панель{% endblock %}</h1>
+      <nav class="admin-nav" aria-label="Разделы панели">
+        <a href="{{ url_for('admin_home') }}" {% if request.endpoint == 'admin_home' %}aria-current="page"{% endif %}>Обзор</a>
+        <a href="{{ url_for('admin_trips') }}" {% if request.endpoint in ['admin_trips', 'admin_trip_edit', 'admin_trip_new'] %}aria-current="page"{% endif %}>Поездки</a>
+        <a href="{{ url_for('admin_schedules') }}" {% if request.endpoint in ['admin_schedules', 'admin_schedule_edit', 'admin_schedule_new'] %}aria-current="page"{% endif %}>Расписание</a>
+        <a href="{{ url_for('admin_reviews') }}" {% if request.endpoint == 'admin_reviews' %}aria-current="page"{% endif %}>Отзывы</a>
+        <a href="{{ url_for('admin_users') }}" {% if request.endpoint in ['admin_users', 'admin_user'] %}aria-current="page"{% endif %}>Пользователи</a>
+        <a href="{{ url_for('admin_messages') }}" {% if request.endpoint == 'admin_messages' %}aria-current="page"{% endif %}>Сообщения</a>
+        <a href="{{ url_for('admin_complaints') }}" {% if request.endpoint == 'admin_complaints' %}aria-current="page"{% endif %}>Жалобы</a>
+        <a href="{{ url_for('admin_log') }}" {% if request.endpoint == 'admin_log' %}aria-current="page"{% endif %}>Журнал</a>
+        <a href="{{ url_for('home') }}">На сайт</a>
+      </nav>
+    </header>
+    <div class="admin-body">
+      {% block admin %}{% endblock %}
+    </div>
+  </div>
+</div>
+{% endblock %}

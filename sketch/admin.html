@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ALONG — Админ</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="admin-shell">
+    <aside class="admin-side">
+      <div class="admin-brandline">
+        <a class="logo" href="index.html"><span class="logo-mark" aria-hidden="true"><i></i><i></i></span>ALONG</a>
+        <span class="flag">Админ</span>
+      </div>
+      <nav class="admin-nav" aria-label="Разделы панели">
+        <a href="#overview" aria-current="page">Обзор</a>
+        <a href="#trips">Поездки</a>
+        <a href="#users">Пользователи</a>
+        <a href="#reports">Жалобы</a>
+      </nav>
+      <p class="admin-note">Казань и область. Макет без входа и без базы: цифры учебные.</p>
+    </aside>
+    <main class="admin-main" id="overview">
+      <div class="admin-top">
+        <div>
+          <p class="eyebrow">Панель сотрудника</p>
+          <h1>Обзор на 16 ноября</h1>
+          <p class="lede">Что ждёт уточнения, кто на проверке и какие поездки ещё открыты.</p>
+        </div>
+        <a class="btn btn-ghost" href="index.html">На сайт</a>
+      </div>
+      <section class="stats" aria-label="Сводка">
+        <article class="card stat">
+          <p class="muted">Поездок на неделе</p>
+          <strong>48</strong>
+        </article>
+        <article class="card stat">
+          <p class="muted">Ждут уточнения</p>
+          <strong>12</strong>
+        </article>
+        <article class="card stat">
+          <p class="muted">Профилей</p>
+          <strong>186</strong>
+        </article>
+        <article class="card stat">
+          <p class="muted">Жалоб в работе</p>
+          <strong>3</strong>
+        </article>
+      </section>
+
+      <section class="card data" id="trips">
+        <h2>Поездки</h2>
+        <p class="muted">Статусы мест на ближайшие выезды.</p>
+        <div class="data-row data-head" style="margin-top: 8px;">
+          <span>Когда</span>
+          <span>Маршрут</span>
+          <span>Водитель</span>
+          <span>Места</span>
+          <span>Статус</span>
+        </div>
+        <div class="data-row">
+          <span data-label="Когда">18 ноя, 07:40</span>
+          <span data-label="Маршрут">Казань → Иннополис</span>
+          <span data-label="Водитель">Алина Сафина</span>
+          <span data-label="Места">2 из 3</span>
+          <span data-label="Статус"><span class="badge badge-ok">есть места</span></span>
+        </div>
+        <div class="data-row">
+          <span data-label="Когда">18 ноя, 07:55</span>
+          <span data-label="Маршрут">Казань → Иннополис</span>
+          <span data-label="Водитель">Тимур Хакимов</span>
+          <span data-label="Места">1 из 3</span>
+          <span data-label="Статус"><span class="badge badge-lime">почти заполнено</span></span>
+        </div>
+        <div class="data-row">
+          <span data-label="Когда">18 ноя, 16:20</span>
+          <span data-label="Маршрут">Центр → Аэропорт</span>
+          <span data-label="Водитель">Елена Воронова</span>
+          <span data-label="Места">3 из 3</span>
+          <span data-label="Статус"><span class="badge badge-ok">есть места</span></span>
+        </div>
+        <div class="data-row">
+          <span data-label="Когда">17 ноя, 18:20</span>
+          <span data-label="Маршрут">Вокзал → Аэропорт</span>
+          <span data-label="Водитель">Тимур Хакимов</span>
+          <span data-label="Места">0 из 3</span>
+          <span data-label="Статус"><span class="badge badge-muted">отменена</span></span>
+        </div>
+        <div class="data-row">
+          <span data-label="Когда">16 ноя, 09:00</span>
+          <span data-label="Маршрут">Центр → Аэропорт</span>
+          <span data-label="Водитель">Дарья Левина</span>
+          <span data-label="Места">3 из 3</span>
+          <span data-label="Статус"><span class="badge badge-muted">завершена</span></span>
+        </div>
+      </section>
+
+      <section class="card data" id="users">
+        <h2>Пользователи</h2>
+        <p class="muted">Вымышленные профили. Почты в таблице нет.</p>
+        <div class="data-row data-users data-head" style="margin-top: 8px;">
+          <span>Имя</span>
+          <span>Город</span>
+          <span>Поездок</span>
+          <span>Оценка</span>
+          <span>Статус</span>
+        </div>
+        <div class="data-row data-users">
+          <span data-label="Имя" class="who"><img class="mini" src="images/alina.jpg" alt="Алина Сафина" width="64" height="64">Алина Сафина</span>
+          <span data-label="Город">Казань</span>
+          <span data-label="Поездок">128</span>
+          <span data-label="Оценка">4,9</span>
+          <span data-label="Статус"><span class="badge badge-ok">активен</span></span>
+        </div>
+        <div class="data-row data-users">
+          <span data-label="Имя" class="who"><img class="mini" src="images/marat.jpg" alt="Марат Юсупов" width="64" height="64">Марат Юсупов</span>
+          <span data-label="Город">Казань</span>
+          <span data-label="Поездок">64</span>
+          <span data-label="Оценка">4,7</span>
+          <span data-label="Статус"><span class="badge badge-ok">активен</span></span>
+        </div>
+        <div class="data-row data-users">
+          <span data-label="Имя" class="who"><img class="mini" src="images/elena.jpg" alt="Елена Воронова" width="64" height="64">Елена Воронова</span>
+          <span data-label="Город">Иннополис</span>
+          <span data-label="Поездок">41</span>
+          <span data-label="Оценка">5,0</span>
+          <span data-label="Статус"><span class="badge badge-ok">активен</span></span>
+        </div>
+        <div class="data-row data-users">
+          <span data-label="Имя" class="who"><img class="mini" src="images/timur.jpg" alt="Тимур Хакимов" width="64" height="64">Тимур Хакимов</span>
+          <span data-label="Город">Казань</span>
+          <span data-label="Поездок">93</span>
+          <span data-label="Оценка">4,8</span>
+          <span data-label="Статус"><span class="badge badge-line">на проверке</span></span>
+        </div>
+        <div class="data-row data-users">
+          <span data-label="Имя" class="who"><img class="mini" src="images/darya.jpg" alt="Дарья Левина" width="64" height="64">Дарья Левина</span>
+          <span data-label="Город">Зеленодольск</span>
+          <span data-label="Поездок">22</span>
+          <span data-label="Оценка">4,6</span>
+          <span data-label="Статус"><span class="badge badge-ok">активен</span></span>
+        </div>
+        <div class="data-row data-users">
+          <span data-label="Имя" class="who"><img class="mini" src="images/ilya.jpg" alt="Илья Ким" width="64" height="64">Илья Ким</span>
+          <span data-label="Город">Казань</span>
+          <span data-label="Поездок">7</span>
+          <span data-label="Оценка">4,8</span>
+          <span data-label="Статус"><span class="badge badge-line">на проверке</span></span>
+        </div>
+      </section>
+
+      <section class="card data" id="reports">
+        <h2>Жалобы</h2>
+        <ul class="admin-list">
+          <li>
+            <span>Не было посадки у метро «Площадь Тукая», 12 ноября</span>
+            <span class="badge badge-muted">разобрана</span>
+          </li>
+          <li>
+            <span>Водитель просил доплатить наличными, 15 ноября</span>
+            <span class="badge badge-line">на проверке</span>
+          </li>
+          <li>
+            <span>Опоздание больше 20 минут, рейс в аэропорт 16 ноября</span>
+            <span class="badge badge-line">на проверке</span>
+          </li>
+        </ul>
+      </section>
+    </main>
+  </div>
+</body>
+</html>

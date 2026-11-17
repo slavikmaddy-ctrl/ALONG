@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ALONG — Главная</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <script>document.documentElement.classList.add("js");</script>
+</head>
+<body>
+  <a class="skip" href="#content">К содержанию</a>
+  <header class="site-header">
+    <div class="container header-bar">
+      <a class="logo" href="index.html"><span class="logo-mark" aria-hidden="true"><i></i><i></i></span>along</a>
+      <button class="btn btn-ghost nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="site-nav">Меню</button>
+      <nav id="site-nav" class="site-nav" data-nav aria-label="Основное меню">
+        <a href="index.html" aria-current="page">Главная</a>
+        <a href="trips.html">Поездки</a>
+        <a href="schedule.html">Расписание</a>
+        <a href="profile.html">Профиль</a>
+        <a class="btn btn-nav" href="account.html">Войти</a>
+      </nav>
+    </div>
+  </header>
+  <main id="content">
+    <section class="stage" aria-label="Поиск поездки">
+      <div class="stage-map">
+        <div id="along-map"></div>
+      </div>
+      <div class="stage-scrim" aria-hidden="true"></div>
+      <div class="stage-fade" aria-hidden="true"></div>
+      <div class="stage-inner">
+        <p id="map-fallback" class="map-fallback" hidden></p>
+        <p class="kicker">Россия и соседние страны</p>
+        <h1>Место в машине находится до выезда.</h1>
+        <p class="stage-lead">Попутчики по России, Беларуси, Казахстану, Армении, Кыргызстану, Узбекистану, Таджикистану и Азербайджану. Цена и свободные места видны ещё до посадки.</p>
+        <form id="ride-search" class="search-form" action="trips.html" method="get">
+          <label class="field suggest">
+            <span>Откуда</span>
+            <input id="from-input" name="from" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="from-list">
+            <ul id="from-list" class="suggest-list" hidden role="listbox"></ul>
+          </label>
+          <label class="field suggest">
+            <span>Куда</span>
+            <input id="to-input" name="to" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="to-list">
+            <ul id="to-list" class="suggest-list" hidden role="listbox"></ul>
+          </label>
+          <label class="field">
+            <span>Дата</span>
+            <input id="date-input" name="date" type="date" autocomplete="off">
+          </label>
+          <button class="btn btn-primary" type="submit">Найти</button>
+        </form>
+        <div id="service-row" class="service-row" hidden>
+          <a href="trips.html">Найти попутчика</a>
+          <a href="trip.html">Составить оптимизированный маршрут</a>
+          <a href="schedule.html">Расписание автобусов, самолётов и поездов</a>
+          <a href="#confirm-title">Запланировать поездку</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="band reveal" aria-labelledby="about-title">
+      <div class="container split">
+        <div>
+          <p class="kicker">О сервисе</p>
+          <h2 id="about-title">Одна машина на двоих, если маршрут уже совпал.</h2>
+          <p class="lede">ALONG собирает выезды по России и в дружественные страны: Беларусь, Казахстан, Армению, Кыргызстан, Узбекистан, Таджикистан и Азербайджан. Казань здесь один из городов, не единственный.</p>
+          <p class="lede">Водитель пишет цену за место. Пассажир видит рейтинг до заявки, а точку посадки согласуют до подтверждения.</p>
+          <a class="btn btn-primary more" href="trips.html">Смотреть поездки</a>
+        </div>
+        <figure class="portrait">
+          <img src="images/hero-drive.jpg" alt="Человек за рулём на городской дороге" width="900" height="1100">
+        </figure>
+      </div>
+    </section>
+
+    <section class="band band-photo reveal" aria-labelledby="routes-title">
+      <div class="container">
+        <p class="kicker">Маршруты</p>
+        <h2 id="routes-title">Куда едут на этой неделе.</h2>
+        <a class="feature-bar" href="trips.html">
+          <span><i class="dot" aria-hidden="true"></i> Москва → Минск, утро — ещё есть места</span>
+          <img src="images/road.jpg" alt="Фургон на шоссе днём" width="800" height="500">
+        </a>
+        <nav class="cat-row" aria-label="Категории поездок">
+          <a href="trips.html"><img src="images/city.jpg" alt="" width="64" height="64">По городу</a>
+          <a href="trips.html"><img src="images/road.jpg" alt="" width="64" height="64">Межгород</a>
+          <a href="schedule.html"><img src="images/airport.jpg" alt="" width="64" height="64">В аэропорт</a>
+          <a href="trips.html"><img src="images/evening.jpg" alt="" width="64" height="64">Вечером</a>
+          <a href="trip.html"><img src="images/luggage.jpg" alt="" width="64" height="64">С багажником</a>
+        </nav>
+      </div>
+    </section>
+
+    <section class="band reveal" aria-labelledby="stories-title">
+      <div class="container">
+        <p class="kicker">Поездки</p>
+        <h2 id="stories-title">Ближайшие карточки: кто везёт и сколько осталось мест.</h2>
+        <div class="story-grid">
+          <a class="story" href="trip.html">
+            <figure>
+              <img src="images/alina.jpg" alt="Алина Сафина" width="400" height="400">
+              <span></span>
+            </figure>
+            <div>
+              <time datetime="2026-11-18">18 ноября · 07:40</time>
+              <strong>Казань → Алматы · 4&nbsp;200&nbsp;₽</strong>
+              <span class="badge badge-ok">есть места</span>
+            </div>
+          </a>
+          <a class="story" href="trip.html">
+            <figure>
+              <img src="images/elena.jpg" alt="Елена Воронова" width="400" height="400">
+              <span></span>
+            </figure>
+            <div>
+              <time datetime="2026-11-18">18 ноября · 16:20</time>
+              <strong>Москва → Минск · 1&nbsp;800&nbsp;₽</strong>
+              <span class="badge badge-ok">есть места</span>
+            </div>
+          </a>
+          <a class="story" href="trip.html">
+            <figure>
+              <img src="images/timur.jpg" alt="Тимур Хакимов" width="400" height="400">
+              <span></span>
+            </figure>
+            <div>
+              <time datetime="2026-11-19">19 ноября · 09:10</time>
+              <strong>Ереван → Баку · 2&nbsp;400&nbsp;₽</strong>
+              <span class="badge badge-lime">почти заполнено</span>
+            </div>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <section class="band band-road reveal" id="plan" aria-labelledby="confirm-title">
+      <div class="container">
+        <p class="kicker">Подтверждение</p>
+        <h2 id="confirm-title">Заявка не равна поездке, пока план не закрыт.</h2>
+        <ol class="steps">
+          <li class="is-done"><span class="step-index">1</span><span class="step-label">Заявка</span><span class="step-note">Пассажир пишет, куда и когда.</span></li>
+          <li class="is-current"><span class="step-index">2</span><span class="step-label">Уточнение</span><span class="step-note">Сходятся точка, багаж и телефон.</span></li>
+          <li><span class="step-index">3</span><span class="step-label">План</span><span class="step-note">Время и место стоят в карточке.</span></li>
+          <li><span class="step-index">4</span><span class="step-label">Подтверждение</span><span class="step-note">Место закреплено за человеком.</span></li>
+        </ol>
+        <a class="btn btn-primary more" href="trip.html">Открыть карточку</a>
+      </div>
+    </section>
+
+    <section class="band reveal" aria-labelledby="news-title">
+      <div class="container">
+        <p class="kicker">Лента</p>
+        <h2 id="news-title">Что изменилось в расписании на неделю 16–22 ноября.</h2>
+        <ul class="news-list">
+          <li>
+            <span>18 ноября</span>
+            <a href="trips.html">Москва → Минск: у Елены Вороновой два свободных места</a>
+            <span>›</span>
+          </li>
+          <li>
+            <span>18 ноября</span>
+            <a href="trips.html">Казань → Алматы ещё набирает пассажиров</a>
+            <span>›</span>
+          </li>
+          <li>
+            <span>19 ноября</span>
+            <a href="schedule.html">Бишкек и Ташкент: утренние посадки у аэропорта</a>
+            <span>›</span>
+          </li>
+          <li>
+            <span>Точка</span>
+            <a href="schedule.html">Прибрежный на этой неделе без выездов</a>
+            <span>›</span>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="band reveal" aria-labelledby="cta-title">
+      <div class="container cta">
+        <div>
+          <p class="kicker">Кабинет</p>
+          <h2 id="cta-title">Войдите, если уже ездите, или оставьте профиль.</h2>
+        </div>
+        <a class="btn btn-primary" href="account.html">Войти</a>
+      </div>
+    </section>
+  </main>
+  <footer class="site-footer">
+    <div class="container footer-grid">
+      <div>
+        <strong class="logo">along</strong>
+        <p>Попутчики по России и в Беларусь, Казахстан, Армению, Кыргызстан, Узбекистан, Таджикистан и Азербайджан. Имена, машины и рейсы в макете вымышлены.</p>
+        <p class="copy">2026</p>
+      </div>
+      <nav class="footer-links" aria-label="Страницы макета">
+        <a href="index.html">Главная</a>
+        <a href="trips.html">Поездки</a>
+        <a href="trip.html">Карточка</a>
+        <a href="schedule.html">Расписание</a>
+        <a href="profile.html">Профиль</a>
+        <a href="account.html">Вход</a>
+        <a href="admin.html">Для сотрудников</a>
+      </nav>
+    </div>
+  </footer>
+  <script src="https://maps.api.2gis.ru/2.0/loader.js?pkg=full"></script>
+  <script src="app.js"></script>
+</body>
+</html>

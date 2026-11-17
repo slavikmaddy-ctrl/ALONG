@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ALONG — Алина Сафина</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip" href="#content">К содержанию</a>
+  <header class="site-header">
+    <div class="container header-bar">
+      <a class="logo" href="index.html"><span class="logo-mark" aria-hidden="true"><i></i><i></i></span>ALONG</a>
+      <button class="btn btn-ghost nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="site-nav">Меню</button>
+      <nav id="site-nav" class="site-nav" data-nav aria-label="Основное меню">
+        <a href="index.html">Главная</a>
+        <a href="trips.html">Поездки</a>
+        <a href="schedule.html">Расписание</a>
+        <a href="profile.html" aria-current="page">Профиль</a>
+        <a class="btn btn-nav" href="account.html">Войти</a>
+      </nav>
+    </div>
+  </header>
+  <main id="content" class="page">
+    <div class="container profile-layout">
+      <aside class="card">
+        <img class="profile-photo" src="images/alina.jpg" alt="Алина Сафина" width="800" height="1000">
+        <h1>Алина Сафина</h1>
+        <p class="identity-meta" style="margin-top: 8px;">
+          <span class="rating">4,9</span>
+          <span class="muted">128 поездок</span>
+        </p>
+        <p style="margin-top: 14px;"><strong>Машина.</strong> Kia Ceed, 2021, серый.</p>
+        <figure class="car-shot">
+          <img src="images/car.jpg" alt="Небольшой городской автомобиль днём" width="1200" height="800">
+          <figcaption>Городская машина днём</figcaption>
+        </figure>
+        <p class="muted" style="margin-top: 6px;">Детское кресло не возит. В багажнике обычно свободно одно место.</p>
+        <p style="margin-top: 14px;"><span class="badge badge-ok">на линии по будням</span></p>
+      </aside>
+      <div class="stack">
+        <section class="card">
+          <h2>О попутчике</h2>
+          <p style="margin-top: 8px;">Езжу из Казани в Иннополис по будням и выезжаю от метро «Площадь Тукая». В салоне можно спокойно поработать: музыку не включаю, если пассажир просит тишину. К остановке подхожу к названному времени и жду пять минут.</p>
+          <p style="margin-top: 8px;">Если едете с рюкзаком, места хватит. Крупный чемодан лучше оговорить в заявке — багажник один.</p>
+        </section>
+        <section class="card">
+          <h2>Отзывы</h2>
+          <ul class="reviews">
+            <li>
+              <p>Выехали минута в минуту, в машине было спокойно. До Университетской доехали без крюка.</p>
+              <p class="muted">Кирилл Немов · 12 ноября · поездка в Иннополис</p>
+            </li>
+            <li>
+              <p>Сели у метро, цена совпала с карточкой. Алина написала, у какого выхода стоит.</p>
+              <p class="muted">Светлана Орехова · 4 ноября · поездка в Иннополис</p>
+            </li>
+            <li>
+              <p>Вечером из центра до Дербышек. Одно место в багажнике правда было свободно.</p>
+              <p class="muted">Пётр Лапин · 28 октября · поездка по городу</p>
+            </li>
+          </ul>
+        </section>
+        <section class="card">
+          <h2>Ближайшие поездки</h2>
+          <div class="mini-rides">
+            <a href="trip.html">
+              <strong>18 ноя, 07:40</strong>
+              <span>Казань → Иннополис</span>
+              <span class="price">350&nbsp;₽</span>
+            </a>
+            <a href="trip.html">
+              <strong>18 ноя, 19:05</strong>
+              <span>ул. Баумана → Иннополис</span>
+              <span class="price">390&nbsp;₽</span>
+            </a>
+            <a href="schedule.html">
+              <strong>20 ноя, 07:30</strong>
+              <span>Аэропорт → Иннополис</span>
+              <span class="price">600&nbsp;₽</span>
+            </a>
+          </div>
+        </section>
+      </div>
+    </div>
+  </main>
+  <footer class="site-footer">
+    <div class="container footer-grid">
+      <div>
+        <strong>ALONG</strong>
+        <p>Попутчики по России и соседним странам. Макет интерфейса: имена, машины и рейсы вымышлены.</p>
+      </div>
+      <nav class="footer-links" aria-label="Страницы макета">
+        <a href="index.html">Главная</a>
+        <a href="trips.html">Поездки</a>
+        <a href="trip.html">Карточка поездки</a>
+        <a href="schedule.html">Расписание</a>
+        <a href="profile.html">Профиль</a>
+        <a href="account.html">Вход</a>
+        <a href="admin.html">Для сотрудников</a>
+      </nav>
+    </div>
+  </footer>
+  <script src="app.js"></script>
+</body>
+</html>

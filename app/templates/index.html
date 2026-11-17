@@ -1,0 +1,183 @@
+{% extends "base.html" %}
+{% block title %}ALONG — Главная{% endblock %}
+{% block body_class %}is-home{% endblock %}
+{% block head_extra %}
+<link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet">
+{% endblock %}
+{% block main %}
+<section class="stage" aria-label="Поиск поездки">
+  <video class="hero-video" autoplay loop muted playsinline preload="auto"
+         poster="{{ url_for('static', filename='images/road.jpg') }}"
+         aria-hidden="true" tabindex="-1">
+    <source src="{{ url_for('static', filename='videos/hero-bg.mp4') }}" type="video/mp4">
+  </video>
+  <div class="hero-shade" aria-hidden="true"></div>
+  <button type="button" id="map-open" class="map-open">Открыть карту</button>
+  <div class="stage-map" hidden>
+    <div id="along-map"></div>
+    <button type="button" id="map-close" class="map-close">Закрыть карту</button>
+  </div>
+  <div class="stage-inner">
+    <p id="map-fallback" class="map-fallback" hidden></p>
+    <p class="kicker">Россия и соседние страны</p>
+    <h1>Доедем вместе.</h1>
+    <p class="stage-lead">Попутчики по России, Беларуси, Казахстану, Армении, Кыргызстану, Узбекистану, Таджикистану и Азербайджану. Цена и свободные места видны ещё до посадки.</p>
+    <form id="ride-search" class="search-form" action="{{ url_for('trips') }}" method="get">
+      <label class="field suggest">
+        <span>Откуда</span>
+        <input id="from-input" name="from" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="from-list">
+        <input id="from-lat" name="from_lat" type="hidden">
+        <input id="from-lon" name="from_lon" type="hidden">
+        <ul id="from-list" class="suggest-list" hidden role="listbox"></ul>
+        <small id="from-error" hidden></small>
+        <small id="geo-note" hidden></small>
+        <button class="btn btn-ghost" id="geo-retry" type="button">Разрешить геолокацию</button>
+      </label>
+      <label class="field suggest">
+        <span>Куда</span>
+        <input id="to-input" name="to" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="to-list">
+        <input id="to-lat" name="to_lat" type="hidden">
+        <input id="to-lon" name="to_lon" type="hidden">
+        <ul id="to-list" class="suggest-list" hidden role="listbox"></ul>
+        <small id="to-error" hidden></small>
+        <small id="to-input-empty" hidden></small>
+      </label>
+      <label class="field">
+        <span>Тип поездки</span>
+        <select id="kind-input" name="kind">
+          <option value="">Любой</option>
+          <option value="city">По городу</option>
+          <option value="intercity">Межгород</option>
+          <option value="international">Между странами</option>
+        </select>
+      </label>
+      <div class="field along-cal-field">
+        <span>Дата</span>
+        <input id="date-input" name="date" type="hidden" value="">
+        <small id="date-error" hidden></small>
+        <div class="along-cal" data-calendar data-input="date-input" data-endpoint="/api/trip-days" data-from="from-input" data-to="to-input" data-kind="kind-input" data-days-id="home-days" data-blank="Когда есть поездки"></div>
+        <script type="application/json" id="home-days">{{ trip_days|tojson }}</script>
+      </div>
+      <button class="btn btn-primary" type="submit">Найти</button>
+    </form>
+    <div id="service-row" class="service-row" hidden>
+      <a id="svc-trips" href="{{ url_for('trips') }}">Найти попутчика</a>
+      <a id="svc-route" href="{{ url_for('route_page') }}">Составить оптимизированный маршрут</a>
+      <a id="svc-schedule" href="{{ url_for('schedule') }}">Расписание автобусов, самолётов и поездов</a>
+      <a id="svc-plan" href="{{ url_for('new_trip') }}">Запланировать поездку</a>
+    </div>
+  </div>
+</section>
+<section class="band reveal">
+  <div class="container split">
+    <div>
+      <p class="kicker">О сервисе</p>
+      <h2>Одна машина на двоих, если маршрут уже совпал.</h2>
+      <p class="lede">ALONG собирает выезды по России и в дружественные страны. Казань здесь один из городов, не единственный. Место в салоне закрепляется только после шага «Подтверждение».</p>
+      <a class="btn btn-primary more" href="{{ url_for('trips') }}">Смотреть поездки</a>
+    </div>
+    <figure class="portrait">
+      <img src="{{ url_for('media', name='hero-drive.jpg') }}" alt="Человек за рулём на городской дороге" width="900" height="1100">
+    </figure>
+  </div>
+</section>
+<section class="band reveal" id="how-it-works">
+  <div class="container">
+    <p class="kicker">Как это работает</p>
+    <h2>Четыре шага, и место в машине согласовано.</h2>
+    <ol class="steps-grid">
+      <li>
+        <span class="step-num">01</span>
+        <h3>Заявка</h3>
+        <p>Пассажир указывает, откуда и куда едет, и выбирает день, на который уже есть поездки.</p>
+      </li>
+      <li>
+        <span class="step-num">02</span>
+        <h3>Уточнение</h3>
+        <p>Водитель и пассажир сверяют точку встречи, багаж и удобное время выезда.</p>
+      </li>
+      <li>
+        <span class="step-num">03</span>
+        <h3>План</h3>
+        <p>Маршрут, цена за место и свободные места становятся понятны обоим до посадки.</p>
+      </li>
+      <li>
+        <span class="step-num">04</span>
+        <h3>Подтверждение</h3>
+        <p>Место в салоне закрепляется. Поездка считается согласованной только после этого шага.</p>
+      </li>
+    </ol>
+  </div>
+</section>
+<section class="band band-photo reveal">
+  <div class="container">
+    <p class="kicker">Маршруты</p>
+    <h2>Куда едут на этой неделе.</h2>
+    <div class="story-grid">
+      {% for trip in featured %}
+      {% set badge, left, past = trip_meta(trip) %}
+      <a class="story" href="{{ url_for('trip_page', trip_id=trip.id) }}">
+        <div class="story-plate">
+          <figure class="story-sheet">
+            <img src="{{ url_for('media', name=trip.photo) }}" alt="{{ trip.driver_name }}, маршрут {{ trip.origin }} — {{ trip.destination }}">
+          </figure>
+        </div>
+        <div class="story-meta">
+          <time datetime="{{ trip.depart_at }}">{{ fmt_dt(trip.depart_at) }}</time>
+          <span class="story-pill">{{ badge }}</span>
+        </div>
+        <strong>{{ trip.origin }} → {{ trip.destination }} · {{ trip.price }}&nbsp;₽</strong>
+      </a>
+      {% else %}
+      <p class="muted">Открытых поездок пока нет.</p>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+<section class="band reveal user-reviews" id="user-reviews">
+  <div class="container">
+    <p class="kicker">Отзывы</p>
+    <h2>Отзывы наших пользователей</h2>
+    <div class="reviews-grid">
+      <article class="review-card">
+        <img class="review-avatar" src="{{ url_for('media', name='alina.jpg') }}" alt="">
+        <p class="review-card__name">Алина Сафина</p>
+        <p class="review-card__city">Казань</p>
+        <p class="review-stars" aria-label="Оценка 5 из 5">★★★★★</p>
+        <p>Выехали утром без задержки. В салоне было тихо, и место было ровно то, о котором договорились.</p>
+      </article>
+      <article class="review-card">
+        <img class="review-avatar" src="{{ url_for('media', name='elena.jpg') }}" alt="">
+        <p class="review-card__name">Елена Воронова</p>
+        <p class="review-card__city">Москва</p>
+        <p class="review-stars" aria-label="Оценка 5 из 5">★★★★★</p>
+        <p>Маршрут до Минска совпал с моим. Цену и багаж обсудили заранее, в дороге сюрпризов не было.</p>
+      </article>
+      <article class="review-card">
+        <img class="review-avatar" src="{{ url_for('media', name='marat.jpg') }}" alt="">
+        <p class="review-card__name">Марат Юсупов</p>
+        <p class="review-card__city">Бишкек</p>
+        <p class="review-stars" aria-label="Оценка 5 из 5">★★★★★</p>
+        <p>Нашёл попутчика на нужный день. Встретились у аэропорта, доехали спокойно и вовремя.</p>
+      </article>
+    </div>
+  </div>
+</section>
+<button type="button" id="map-cursor" class="map-cursor" hidden>Двигать карту</button>
+<section class="band band-road reveal" id="plan">
+  <div class="container">
+    <p class="kicker">Подтверждение</p>
+    <h2 id="confirm-title">Заявка не равна поездке, пока план не закрыт.</h2>
+    <ol class="steps">
+      <li><span class="step-index">1</span><span class="step-label">Заявка</span><span class="step-note">Пассажир пишет, куда и когда.</span></li>
+      <li><span class="step-index">2</span><span class="step-label">Уточнение</span><span class="step-note">Точка, багаж и телефон.</span></li>
+      <li><span class="step-index">3</span><span class="step-label">План</span><span class="step-note">Оба сверяют время и место.</span></li>
+      <li><span class="step-index">4</span><span class="step-label">Подтверждение</span><span class="step-note">Место закреплено.</span></li>
+    </ol>
+  </div>
+</section>
+{% endblock %}
+{% block scripts %}
+<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+<script src="{{ url_for('static', filename='home.js') }}?v=home7"></script>
+{% endblock %}

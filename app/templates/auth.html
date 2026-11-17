@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}ALONG — {% if mode == 'login' %}Вход{% else %}Регистрация{% endif %}{% endblock %}
+{% block body_class %}is-auth{% endblock %}
+{% block main %}
+<section class="auth-section">
+  <div class="auth-info">
+    {% if mode == 'login' %}
+      <h1>С возвращением</h1>
+      <p>Почта и пароль профиля. После входа можно сохранить маршрут и подтвердить место в машине.</p>
+    {% else %}
+      <h1>Присоединяйтесь</h1>
+      <p>Имя, почта и город. Профиль создаётся сразу, а поездку можно опубликовать после подтверждения почты.</p>
+    {% endif %}
+  </div>
+  <div class="auth-form-wrap">
+    <div class="card auth-card">
+      {% if mode == 'login' %}
+        {% if expired %}<p class="note-bad">Сессия истекла. Войдите снова.</p>{% endif %}
+        {% if errors.form %}<p class="note-bad">{{ errors.form }}</p>{% endif %}
+        <form class="stack" method="post" action="{{ url_for('login') }}">
+          <input type="hidden" name="csrf" value="{{ csrf }}">
+          <input type="hidden" name="next" value="{{ nxt }}">
+          <label class="field {{ 'is-error' if errors.email else '' }}"><span>Почта</span><input name="email" value="{{ email }}" autocomplete="username" placeholder="name@example.com">{% if errors.email %}<small>{{ errors.email }}</small>{% endif %}</label>
+          <label class="field {{ 'is-error' if errors.password else '' }}"><span>Пароль</span><input name="password" type="password" autocomplete="current-password" placeholder="••••••••">{% if errors.password %}<small>{{ errors.password }}</small>{% endif %}</label>
+          <button class="btn btn-primary" type="submit">Войти</button>
+        </form>
+        <p class="auth-switch">Нет аккаунта? <a class="text-link" href="{{ url_for('register', next=nxt) if nxt else url_for('register') }}">Зарегистрироваться</a></p>
+      {% else %}
+        <form class="stack" method="post" action="{{ url_for('register') }}">
+          <input type="hidden" name="csrf" value="{{ csrf }}">
+          <input type="hidden" name="next" value="{{ nxt }}">
+          <label class="field {{ 'is-error' if errors.name else '' }}"><span>Имя</span><input name="name" value="{{ form.name }}" placeholder="Как к вам обращаться?">{% if errors.name %}<small>{{ errors.name }}</small>{% endif %}</label>
+          <label class="field {{ 'is-error' if errors.email else '' }}"><span>Почта</span><input name="email" value="{{ form.email }}" autocomplete="off" placeholder="name@example.com">{% if errors.email %}<small>{{ errors.email }}</small>{% endif %}</label>
+          <label class="field {{ 'is-error' if errors.password else '' }}"><span>Пароль</span><input name="password" type="password" autocomplete="new-password" placeholder="••••••••">{% if errors.password %}<small>{{ errors.password }}</small>{% endif %}</label>
+          <label class="field {{ 'is-error' if errors.city else '' }}"><span>Город</span>
+            <input name="city" value="{{ form.city }}" list="cities">
+            <datalist id="cities">{% for city in cities %}<option value="{{ city.name }}">{% endfor %}</datalist>
+            {% if errors.city %}<small>{{ errors.city }}</small>{% endif %}
+          </label>
+          <fieldset class="role-switch">
+            <legend>Как вы поедете</legend>
+            <label class="role-switch__opt">
+              <input type="radio" name="account_kind" value="passenger" {% if form.account_kind != 'driver' %}checked{% endif %}>
+              <span>Я пассажир</span>
+            </label>
+            <label class="role-switch__opt">
+              <input type="radio" name="account_kind" value="driver" {% if form.account_kind == 'driver' %}checked{% endif %}>
+              <span>Я водитель</span>
+            </label>
+            {% if errors.account_kind %}<small class="role-switch__error">{{ errors.account_kind }}</small>{% endif %}
+          </fieldset>
+          <button class="btn btn-primary" type="submit">Создать профиль</button>
+        </form>
+        <p class="auth-switch">Уже есть профиль? <a class="text-link" href="{{ url_for('login', next=nxt) if nxt else url_for('login') }}">Войти</a></p>
+      {% endif %}
+    </div>
+  </div>
+</section>
+{% endblock %}
