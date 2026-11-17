@@ -46,6 +46,7 @@ STATUS_LABELS = {
     "hidden": "скрыта",
     "done": "разобрана",
     "active": "активен",
+    "review": "на проверке",
     "blocked": "заблокирован",
     "pending": "на проверке",
     "approved": "подтверждён",
@@ -240,6 +241,16 @@ def fmt_ts(value):
     except (TypeError, ValueError, OSError, OverflowError):
         return ""
     return f"{moment.day} {MONTHS[moment.month - 1]} {moment.year}"
+
+
+@app.template_filter("fmt_ts_full")
+def fmt_ts_full(value):
+    """Дата и время события: «18 ноября 2026, 14:07»."""
+    try:
+        moment = datetime.fromtimestamp(float(value))
+    except (TypeError, ValueError, OSError, OverflowError):
+        return ""
+    return f"{moment.day} {MONTHS[moment.month - 1]} {moment.year}, {moment.strftime('%H:%M')}"
 
 
 def trip_meta(row):
@@ -1202,11 +1213,41 @@ def status_label(value):
 
 COMPLAINT_LABELS = {"open": "на проверке", "done": "разобрана"}
 
+ADMIN_ACTION_LABELS = {
+    "hide": "скрытие",
+    "restore": "возврат в поиск",
+    "create": "создание",
+    "save": "изменение",
+    "delete": "удаление",
+    "driver-approve": "подтверждение водителя",
+    "driver-reject": "отказ водителю",
+    "resignation-approve": "одобрение отказа от статуса",
+    "resignation-reject": "отклонение отказа от статуса",
+    "complaint-close": "закрытие жалобы",
+    "user-update": "изменение пользователя",
+}
+
+ADMIN_ENTITY_LABELS = {
+    "trip": "поездка",
+    "user": "пользователь",
+    "schedule": "рейс",
+    "review": "отзыв",
+    "complaint": "жалоба",
+}
+
+TRIP_STATUS_LABELS = {"open": "открыта", "hidden": "скрыта", "cancelled": "отменена"}
+
 
 @app.template_filter("complaint_label")
 def complaint_label(value):
     key = (value or "").strip().lower()
     return COMPLAINT_LABELS.get(key, value or "")
+
+
+@app.template_filter("trip_status_label")
+def trip_status_label(value):
+    key = (value or "").strip().lower()
+    return TRIP_STATUS_LABELS.get(key, value or "")
 
 
 EMPTY_NOTIFICATIONS = {"clarify": 0, "unread": 0, "problems": 0, "total": 0}
@@ -3069,7 +3110,7 @@ def admin_trips_export():
     payload = buffer.getvalue().encode("utf-8-sig")
     return Response(
         payload,
-        mimetype="text/csv; charset=utf-8",
+        content_type="text/csv; charset=utf-8",
         headers={"Content-Disposition": "attachment; filename=trips.csv"},
     )
 
@@ -3374,7 +3415,7 @@ def admin_user(user_id):
                     db().execute("DELETE FROM sessions WHERE user_id = ?", (person["id"],))
                 log_admin(
                     "user-update", "user", person["id"],
-                    "роль: %s, статус: %s" % (role, status),
+                    "роль: %s, статус: %s" % (status_label(role), status_label(status)),
                 )
                 db().commit()
                 flash("Пользователь обновлён.")
@@ -3706,8 +3747,30 @@ def admin_log():
         """,
         [],
     )
+    items = []
+    for row in rows:
+        action = (row["action"] or "").strip()
+        details = row["details"] or ""
+        if action.startswith("driver-") or action.startswith("resignation-"):
+            details = status_label(details)
+        elif action == "user-update" and details.startswith("роль: "):
+            role_part, _, status_part = details.partition(", статус: ")
+            details = "роль: %s, статус: %s" % (
+                status_label(role_part[len("роль: "):]),
+                status_label(status_part),
+            )
+        items.append(
+            {
+                "created_at": row["created_at"],
+                "admin_name": row["admin_name"],
+                "action": ADMIN_ACTION_LABELS.get(action, action),
+                "entity": ADMIN_ENTITY_LABELS.get(row["entity"], row["entity"]),
+                "entity_id": row["entity_id"],
+                "details": details,
+            }
+        )
     return render_template(
-        "admin_log.html", rows=rows, page=page, pages=pages, total=total
+        "admin_log.html", rows=items, page=page, pages=pages, total=total
     )
 
 

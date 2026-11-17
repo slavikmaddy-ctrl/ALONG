@@ -659,3 +659,42 @@ def test_404_page_has_distinct_actions(client):
     html = client.get("/nope").get_data(as_text=True)
     assert html.count(">На главную<") == 1
     assert ">Смотреть поездки<" in html
+
+def test_admin_trip_status_filter_is_readable(admin_client):
+    html = admin_client.get("/admin/trips").get_data(as_text=True)
+    assert ">открыта</option>" in html
+    assert ">скрыта</option>" in html
+    assert ">отменена</option>" in html
+    assert ">open</option>" not in html
+
+
+def test_admin_user_selects_are_readable(admin_client):
+    html = admin_client.get("/admin/users").get_data(as_text=True)
+    assert ">пользователь</option>" in html
+    assert ">администратор</option>" in html
+    assert ">на проверке</option>" in html
+    assert ">user</option>" not in html
+    assert ">review</option>" not in html
+
+
+def test_csv_export_has_single_charset(admin_client):
+    response = admin_client.get("/admin/trips/export")
+    assert response.headers["Content-Type"] == "text/csv; charset=utf-8"
+
+
+def test_admin_log_shows_human_readable_action(admin_client, db):
+    db.execute(
+        "INSERT INTO complaints (author_id, trip_id, body, status, staff_note, created_at) "
+        "VALUES (2, 1, 'Проверка журнала', 'open', '', 1.0)"
+    )
+    db.commit()
+    complaint_id = db.execute("SELECT MAX(id) FROM complaints").fetchone()[0]
+    token = get_csrf(admin_client, "/admin/complaints")
+    admin_client.post(
+        "/admin/complaints/%d" % complaint_id,
+        data={"staff_note": "Проверили", "csrf": token},
+    )
+    html = admin_client.get("/admin/log").get_data(as_text=True)
+    assert "закрытие жалобы" in html
+    assert "жалоба #" in html
+    assert "complaint-close" not in html

@@ -17,7 +17,7 @@
         <th>Статус</th>
         <th>Роль</th>
         <th>Водитель</th>
-        <th>Роль и блокировка</th>
+        <th>Изменить роль и статус</th>
       </tr>
     </thead>
     <tbody>
@@ -46,13 +46,13 @@
           пассажир
           {% endif %}
         </td>
-        <td data-label="Роль и блокировка">
+        <td data-label="Изменить роль и статус">
           <form method="post" action="{{ url_for('admin_user', user_id=person.id) }}" class="admin-inline">
             <input type="hidden" name="csrf" value="{{ csrf }}">
             <label class="field">
               <select name="role" aria-label="Роль {{ person.name }}">
-                <option value="user" {% if person.role == 'user' %}selected{% endif %}>user</option>
-                <option value="admin" {% if person.role == 'admin' %}selected{% endif %}>admin</option>
+                <option value="user" {% if person.role == 'user' %}selected{% endif %}>{{ 'user'|status_label }}</option>
+                <option value="admin" {% if person.role == 'admin' %}selected{% endif %}>{{ 'admin'|status_label }}</option>
               </select>
             </label>
             <label class="field">

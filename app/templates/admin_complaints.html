@@ -26,7 +26,7 @@
     <p class="admin-complaint__body">{{ item.body }}</p>
     {% if item.origin %}
       <p><a class="text-link" href="{{ url_for('admin_trip_edit', trip_id=item.trip_id) }}">{{ item.origin }} → {{ item.destination }}</a>
-        {% if item.trip_status %} · поездка {{ item.trip_status|status_label }}{% endif %}</p>
+        {% if item.trip_status %} · поездка {{ item.trip_status|trip_status_label }}{% endif %}</p>
     {% else %}
       <p class="muted">Поездка недоступна</p>
     {% endif %}

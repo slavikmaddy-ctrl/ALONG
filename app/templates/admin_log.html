@@ -21,7 +21,7 @@
     <tbody>
       {% for item in rows %}
       <tr>
-        <td data-label="Когда">{{ fmt_ts(item.created_at) }}</td>
+        <td data-label="Когда">{{ item.created_at|fmt_ts_full }}</td>
         <td data-label="Администратор">{% if item.admin_name %}{{ item.admin_name }}{% else %}—{% endif %}</td>
         <td data-label="Действие">{{ item.action }}</td>
         <td data-label="Объект">{{ item.entity }}{% if item.entity_id %} #{{ item.entity_id }}{% endif %}</td>

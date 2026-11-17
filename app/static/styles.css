@@ -3586,3 +3586,12 @@ body.is-home .site-footer {
 .stage .search-form .along-cal .day-pick__btn:hover {
   background: rgba(255, 255, 255, 0.1);
 }
+
+/* ===== Админка: место под нижним меню и читаемые подписи ===== */
+body.is-admin .admin-app {
+  padding-bottom: 140px;
+}
+
+body.is-admin .site-footer {
+  padding-bottom: 96px;
+}

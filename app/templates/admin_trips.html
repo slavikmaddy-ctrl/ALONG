@@ -11,7 +11,7 @@
         <select name="status" onchange="this.form.submit()">
           <option value="">все</option>
           {% for item in ['open', 'hidden', 'cancelled'] %}
-          <option value="{{ item }}" {% if status == item %}selected{% endif %}>{{ item }}</option>
+          <option value="{{ item }}" {% if status == item %}selected{% endif %}>{{ item|trip_status_label }}</option>
           {% endfor %}
         </select>
       </label>
