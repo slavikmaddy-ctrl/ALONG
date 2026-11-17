@@ -27,7 +27,7 @@ from mail import send_mail, smtp_configured
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.abspath(os.environ.get("ALONG_DB") or os.path.join(ROOT, "along.db"))
-IMAGES = os.path.normpath(os.path.join(ROOT, "..", "sketch", "images"))
+IMAGES = os.path.normpath(os.path.join(ROOT, "static", "images"))
 SECRET_PATH = os.path.join(ROOT, ".secret")
 SESSION_SECONDS = 60 * 60 * 8
 HERE = "Моё местоположение"
