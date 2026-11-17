@@ -3442,3 +3442,9 @@ body.is-home .site-footer {
   width: auto;
   margin-top: 2px;
 }
+
+/* ===== Главная: подвал выше фиксированного видео-фона ===== */
+body.is-home .site-footer {
+  position: relative;
+  z-index: 1;
+}
