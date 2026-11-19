@@ -3595,3 +3595,65 @@ body.is-admin .admin-app {
 body.is-admin .site-footer {
   padding-bottom: 96px;
 }
+
+/* ===== Страница маршрута: форма построения ===== */
+.route-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: end;
+  margin-top: 14px;
+}
+
+.route-form .btn {
+  min-height: 48px;
+  white-space: nowrap;
+}
+
+@media (max-width: 720px) {
+  .route-form {
+    grid-template-columns: 1fr;
+  }
+
+  .route-form .btn {
+    width: 100%;
+  }
+}
+
+/* ===== Главная: заполнение сетки маршрутов ===== */
+.story-cta {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 28px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
+}
+
+.story-cta--wide {
+  grid-column: span 2;
+}
+
+.story-cta h3 {
+  margin: 0;
+  font-size: clamp(1.15rem, 2vw, 1.5rem);
+}
+
+.story-cta p {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.story-cta .btn {
+  margin-top: 6px;
+}
+
+@media (max-width: 900px) {
+  .story-cta--wide {
+    grid-column: auto;
+  }
+}

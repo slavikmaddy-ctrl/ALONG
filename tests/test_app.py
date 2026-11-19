@@ -698,3 +698,77 @@ def test_admin_log_shows_human_readable_action(admin_client, db):
     assert "закрытие жалобы" in html
     assert "жалоба #" in html
     assert "complaint-close" not in html
+
+
+def test_route_page_has_form_without_initial_error(client):
+    html = client.get("/route").get_data(as_text=True)
+    assert 'class="route-form"' in html
+    assert 'name="from"' in html
+    assert 'name="to"' in html
+    assert "Выберите адрес из списка" not in html
+
+
+def test_route_page_shows_distance_after_submit(client):
+    html = client.get("/route?from=Москва&to=Минск").get_data(as_text=True)
+    assert "Москва → Минск" in html
+    assert "км в пути" in html
+    assert "route-map" in html
+
+
+def test_route_page_reports_unknown_city_after_submit(client):
+    html = client.get("/route?from=Москва&to=Атлантида").get_data(as_text=True)
+    assert "Выберите адрес из списка" in html
+
+
+def test_schedule_selects_nearest_day(admin_client, db):
+    token = get_csrf(admin_client, "/admin/schedules/new")
+    response = admin_client.post(
+        "/admin/schedules/new",
+        data={
+            "mode": "bus",
+            "from": "Казань",
+            "to": "Москва",
+            "date": TOMORROW,
+            "time": "09:40",
+            "title": "Ближайший рейс",
+            "via": "",
+            "leg2_time": "",
+            "csrf": token,
+        },
+    )
+    assert response.status_code == 302
+    html = admin_client.get("/schedule?mode=bus").get_data(as_text=True)
+    assert f'value="{TOMORROW}"' in html
+    assert "Ближайший рейс" in html
+
+
+def test_past_trip_closes_booking_for_guest(client, db):
+    yesterday = (date.today() - timedelta(days=1)).isoformat()
+    db.execute("UPDATE trips SET depart_at = ? WHERE id = 1", (yesterday + "T09:00",))
+    db.commit()
+    html = client.get("/trips/1").get_data(as_text=True)
+    assert "Поездка завершена" in html
+    assert "Заявка сейчас не создаётся" not in html
+
+
+def test_guest_does_not_see_passenger_names(client, db):
+    db.execute(
+        "INSERT INTO bookings (trip_id, passenger_id, seats, status, created_at) "
+        "VALUES (3, 2, 1, 'confirmed', 1.0)"
+    )
+    db.commit()
+    html = client.get("/trips/3").get_data(as_text=True)
+    assert "Имена пассажиров видны водителю и подтверждённым попутчикам." in html
+    assert "Дина Каримова" not in html
+
+
+def test_driver_sees_passenger_names(driver_client, db):
+    trip = db.execute("SELECT id, driver_id FROM trips ORDER BY id LIMIT 1").fetchone()
+    db.execute(
+        "INSERT INTO bookings (trip_id, passenger_id, seats, status, created_at) "
+        "VALUES (?, 2, 1, 'confirmed', 1.0)",
+        (trip["id"],),
+    )
+    db.commit()
+    html = driver_client.get("/trips/%d" % trip["id"]).get_data(as_text=True)
+    assert "Дина Каримова" in html

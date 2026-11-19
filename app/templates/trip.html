@@ -57,7 +57,17 @@
       {% if me and not me.verified %}
         <p class="note-bad">Почта не подтверждена. <a class="text-link" href="{{ url_for('verify_wait') }}">Подтвердите почту</a>, иначе заявка, отзыв и жалоба не отправятся.</p>
       {% endif %}
-      {% if not me %}
+      {% if trip.status == 'cancelled' %}
+        <p class="note-bad">Отменено водителем</p>
+      {% elif past %}
+        <p class="note-ok"><strong>Поездка завершена.</strong> Бронирование закрыто.</p>
+        {% if not me %}
+        <div class="empty-actions">
+          <a class="btn btn-primary" href="{{ url_for('trips') }}">Найти другую поездку</a>
+          <a class="btn btn-ghost" href="{{ url_for('login', next=request.path) }}">Войти</a>
+        </div>
+        {% endif %}
+      {% elif not me %}
         <p style="margin-top: 12px;">Подтверждение доступно после входа. Заявка сейчас не создаётся.</p>
         <div class="empty-actions">
           <a class="btn btn-primary" href="{{ url_for('login', next=request.path) }}">Подтвердить место</a>
@@ -65,18 +75,12 @@
         </div>
       {% elif is_driver %}
         <p style="margin-top: 12px;">Это ваша поездка. Заявки пассажиров ниже.</p>
-        {% if trip.status != 'cancelled' %}
         <form method="post" onsubmit="return confirm('Отменить поездку?');">
           <input type="hidden" name="csrf" value="{{ csrf }}">
           <input type="hidden" name="action" value="cancel_trip">
           <button class="btn btn-ghost" type="submit">Отменить поездку</button>
         </form>
-        {% else %}
-        <p class="note-bad">Отменено водителем</p>
-        {% endif %}
-      {% elif trip.status == 'cancelled' %}
-        <p class="note-bad">Отменено водителем</p>
-      {% elif past or left < 1 and not booking %}
+      {% elif left < 1 and not booking %}
         <p class="note-bad">Мест не осталось.</p>
         <button class="btn btn-ghost" type="button" disabled>Подтвердить место</button>
       {% elif not booking %}
@@ -210,13 +214,20 @@
     {% endif %}
     <section class="card">
       <h2>Пассажиры</h2>
-      {% for person in passengers %}
-        <p style="margin-top: 8px;">{{ person.name }} · {% if trip.status == 'cancelled' %}Отменено водителем{% else %}{{ person.status|status_label }}{% endif %}
-          {% if is_driver %} · <a class="text-link" href="{{ chat_href(person.passenger_id, trip.id) }}">Написать</a>{% endif %}
-        </p>
+      {% set show_people = is_driver or (booking and booking.status == 'confirmed') %}
+      {% if show_people %}
+        {% for person in passengers %}
+          <p style="margin-top: 8px;">{{ person.name }} · {% if trip.status == 'cancelled' %}Отменено водителем{% else %}{{ person.status|status_label }}{% endif %}
+            {% if is_driver %} · <a class="text-link" href="{{ chat_href(person.passenger_id, trip.id) }}">Написать</a>{% endif %}
+          </p>
+        {% else %}
+          <p class="muted">Подтверждённых пассажиров пока нет.</p>
+        {% endfor %}
+      {% elif passengers %}
+        <p class="muted">Имена пассажиров видны водителю и подтверждённым попутчикам.</p>
       {% else %}
         <p class="muted">Подтверждённых пассажиров пока нет.</p>
-      {% endfor %}
+      {% endif %}
       {% if me and not is_driver %}
       <form method="post" class="stack" style="margin-top: 12px;">
         <input type="hidden" name="csrf" value="{{ csrf }}">

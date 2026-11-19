@@ -2399,9 +2399,20 @@ def cancel_trip(row):
 
 @app.route("/schedule")
 def schedule():
-    mode = request.args.get("mode") or "bus"
+    mode_raw = request.args.get("mode")
+    mode = mode_raw or "bus"
     if mode not in ("bus", "plane", "train"):
         mode = "bus"
+    if not mode_raw:
+        try:
+            nearest = db().execute(
+                "SELECT mode FROM schedules WHERE substr(depart_at, 1, 10) >= ? ORDER BY depart_at LIMIT 1",
+                (datetime.now().strftime("%Y-%m-%d"),),
+            ).fetchone()
+        except sqlite3.Error:
+            nearest = None
+        if nearest and nearest["mode"] in ("bus", "plane", "train"):
+            mode = nearest["mode"]
     origin = (request.args.get("from") or "").strip()
     dest = (request.args.get("to") or "").strip()
     date_raw = request.args.get("date") or ""
@@ -2414,6 +2425,12 @@ def schedule():
     except Exception:
         schedule_days = []
     known = {item["date"] for item in schedule_days}
+    if not date_raw and schedule_days and not failed:
+        try:
+            day = datetime.strptime(schedule_days[0]["date"], "%Y-%m-%d").date()
+        except ValueError:
+            day = None
+        date_error = None
     date_value = ""
     if day and not date_error:
         date_value = day.isoformat()
@@ -2452,11 +2469,17 @@ def schedule():
 
 @app.route("/route")
 def route_page():
-    origin, err1 = resolve_place(request.args.get("from"), request.args.get("from_lat"), request.args.get("from_lon"), True)
-    dest, err2 = resolve_place(request.args.get("to"), request.args.get("to_lat"), request.args.get("to_lon"), False)
-    error = err1 or err2
-    if origin and dest and origin["name"] == dest["name"]:
-        error = "Укажите разные точки"
+    raw_from = (request.args.get("from") or "").strip()
+    raw_to = (request.args.get("to") or "").strip()
+    submitted = bool(raw_from or raw_to)
+    origin = dest = None
+    error = None
+    if submitted:
+        origin, err1 = resolve_place(raw_from, request.args.get("from_lat"), request.args.get("from_lon"), True)
+        dest, err2 = resolve_place(raw_to, request.args.get("to_lat"), request.args.get("to_lon"), False)
+        error = err1 or err2
+        if origin and dest and origin["name"] == dest["name"]:
+            error = "Укажите разные точки"
     km = hours = None
     built = False
     if origin and dest and not error:
@@ -2495,8 +2518,8 @@ def route_page():
                 break
     return render_template(
         "route.html", origin=origin, dest=dest, error=error, km=km, hours=hours,
-        built=built, trips=trips_near,
-        raw_from=request.args.get("from") or "", raw_to=request.args.get("to") or "",
+        built=built, trips=trips_near, submitted=submitted,
+        raw_from=raw_from, raw_to=raw_to, cities=CITIES,
     )
 
 

@@ -131,6 +131,14 @@
       {% else %}
       <p class="muted">Открытых поездок пока нет.</p>
       {% endfor %}
+      {% if featured and featured|length < 3 %}
+      <aside class="story-cta{% if featured|length == 1 %} story-cta--wide{% endif %}">
+        <p class="kicker">Все поездки</p>
+        <h3>Ещё направления — в общем списке.</h3>
+        <p>Фильтр по городам, дате и типу поездки.</p>
+        <a class="btn btn-primary" href="{{ url_for('trips') }}">Смотреть поездки</a>
+      </aside>
+      {% endif %}
     </div>
   </div>
 </section>
@@ -164,18 +172,6 @@
   </div>
 </section>
 <button type="button" id="map-cursor" class="map-cursor" hidden>Двигать карту</button>
-<section class="band band-road reveal" id="plan">
-  <div class="container">
-    <p class="kicker">Подтверждение</p>
-    <h2 id="confirm-title">Заявка не равна поездке, пока план не закрыт.</h2>
-    <ol class="steps">
-      <li><span class="step-index">1</span><span class="step-label">Заявка</span><span class="step-note">Пассажир пишет, куда и когда.</span></li>
-      <li><span class="step-index">2</span><span class="step-label">Уточнение</span><span class="step-note">Точка, багаж и телефон.</span></li>
-      <li><span class="step-index">3</span><span class="step-label">План</span><span class="step-note">Оба сверяют время и место.</span></li>
-      <li><span class="step-index">4</span><span class="step-label">Подтверждение</span><span class="step-note">Место закреплено.</span></li>
-    </ol>
-  </div>
-</section>
 {% endblock %}
 {% block scripts %}
 <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>

@@ -11,11 +11,23 @@
 <div class="page"><div class="container stack">
   <section class="card" id="route-panel">
     <p class="kicker">Маршрут</p>
+    <form class="route-form" method="get" action="{{ url_for('route_page') }}">
+      <label class="field"><span>Откуда</span>
+        <input name="from" value="{{ raw_from }}" list="cities" autocomplete="off" placeholder="Город отправления" required>
+      </label>
+      <label class="field"><span>Куда</span>
+        <input name="to" value="{{ raw_to }}" list="cities" autocomplete="off" placeholder="Город назначения" required>
+      </label>
+      <button class="btn btn-primary" type="submit">Построить</button>
+    </form>
+    <datalist id="cities">{% for city in cities %}<option value="{{ city.name }}">{% endfor %}</datalist>
     {% if error %}
       <p class="note-bad">{{ error }}</p>
     {% elif origin and dest %}
-      <p>Около {{ km }} км по прямой, примерно {{ hours }} ч в пути. Линия на карте OpenStreetMap соединяет выбранные города.</p>
+      <p style="margin-top: 16px;">Около {{ km }} км в пути, примерно {{ hours }} ч за рулём. Линия на карте соединяет выбранные города.</p>
       <div id="route-map" class="route-map" data-from-lon="{{ origin.lon }}" data-from-lat="{{ origin.lat }}" data-to-lon="{{ dest.lon }}" data-to-lat="{{ dest.lat }}"></div>
+    {% else %}
+      <p class="muted" style="margin-top: 16px;">Выберите город отправления и город назначения — покажем расстояние, время в пути и поездки рядом.</p>
     {% endif %}
     {% if me and origin and dest and not error %}
     <form method="post" action="{{ url_for('save_route') }}">
