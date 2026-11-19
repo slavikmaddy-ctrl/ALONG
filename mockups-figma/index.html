@@ -1,0 +1,428 @@
+﻿﻿
+<!DOCTYPE html>
+<html lang="ru">
+ <head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1" name="viewport"/>
+  <title>
+   ALONG — Главная
+  </title>
+  <meta content="ALONG — сервис поиска попутчиков по России и СНГ: поездки между городами, расписание транспорта и проверенные водители." name="description"/>
+  <meta content="index, follow" name="robots"/>
+  <meta content="website" property="og:type"/>
+  <meta content="ALONG" property="og:site_name"/>
+  <meta content="ALONG — Главная" property="og:title"/>
+  <meta content="ALONG — сервис поиска попутчиков по России и СНГ: поездки между городами, расписание транспорта и проверенные водители." property="og:description"/>
+  <meta content="http://127.0.0.1:5058/" property="og:url"/>
+  <meta content="http://127.0.0.1:5058/static/logo.png" property="og:image"/>
+  <meta content="summary" name="twitter:card"/>
+  <meta content="ALONG — Главная" name="twitter:title"/>
+  <meta content="ALONG — сервис поиска попутчиков по России и СНГ: поездки между городами, расписание транспорта и проверенные водители." name="twitter:description"/>
+  <meta content="#12161c" name="theme-color"/>
+  <link href="assets/icon-192.png" rel="icon" type="image/png"/>
+  <link href="assets/apple-touch-icon.png" rel="apple-touch-icon"/>
+  <link href="https://fonts.googleapis.com" rel="preconnect"/>
+  <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+  <link href="styles.css" rel="stylesheet"/>
+  <link href="mockup.css" rel="stylesheet"/>
+  <link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet"/>
+ </head>
+ <body class="is-home">
+  <a class="skip" href="#content">
+   К содержанию
+  </a>
+  <header class="site-header">
+   <a aria-label="ALONG" class="logo" href="index.html">
+    <span aria-hidden="true" class="logo-icon">
+     <img alt="" class="logo-img" src="assets/logo.png"/>
+    </span>
+    <span class="logo-word">
+     ALONG
+    </span>
+   </a>
+   <nav aria-label="Основное меню" class="site-nav" data-nav="" id="site-nav">
+    <a aria-current="page" href="index.html">
+     Главная
+    </a>
+    <a href="trips.html">
+     Поездки
+    </a>
+    <a href="schedule.html">
+     Расписание
+    </a>
+    <a href="login.html">
+     Авторизация
+    </a>
+   </nav>
+  </header>
+  <main class="page-enter" id="content">
+   <section aria-label="Поиск поездки" class="stage">
+    <img alt="" class="hero-video" src="assets/hero-still.jpg"/>
+    <div aria-hidden="true" class="hero-shade">
+    </div>
+    <button class="map-open" id="map-open" type="button">
+     Открыть карту
+    </button>
+    <div class="stage-map" hidden="">
+     <div id="along-map">
+     </div>
+     <button class="map-close" id="map-close" type="button">
+      Закрыть карту
+     </button>
+    </div>
+    <div class="stage-inner">
+     <p class="map-fallback" hidden="" id="map-fallback">
+     </p>
+     <p class="kicker">
+      Россия и соседние страны
+     </p>
+     <h1>
+      Доедем вместе.
+     </h1>
+     <p class="stage-lead">
+      Попутчики по России, Беларуси, Казахстану, Армении, Кыргызстану, Узбекистану, Таджикистану и Азербайджану. Цена и свободные места видны ещё до посадки.
+     </p>
+     <form action="trips.html" class="search-form" id="ride-search" method="get">
+      <label class="field suggest">
+       <span>
+        Откуда
+       </span>
+       <input aria-autocomplete="list" aria-controls="from-list" aria-expanded="false" autocomplete="off" id="from-input" name="from" placeholder="Город или адрес" role="combobox"/>
+       <input id="from-lat" name="from_lat" type="hidden"/>
+       <input id="from-lon" name="from_lon" type="hidden"/>
+       <ul class="suggest-list" hidden="" id="from-list" role="listbox">
+       </ul>
+       <small hidden="" id="from-error">
+       </small>
+       <small hidden="" id="geo-note">
+       </small>
+       <button class="btn btn-ghost" id="geo-retry" type="button">
+        Разрешить геолокацию
+       </button>
+      </label>
+      <label class="field suggest">
+       <span>
+        Куда
+       </span>
+       <input aria-autocomplete="list" aria-controls="to-list" aria-expanded="false" autocomplete="off" id="to-input" name="to" placeholder="Куда едем" role="combobox"/>
+       <input id="to-lat" name="to_lat" type="hidden"/>
+       <input id="to-lon" name="to_lon" type="hidden"/>
+       <ul class="suggest-list" hidden="" id="to-list" role="listbox">
+       </ul>
+       <small hidden="" id="to-error">
+       </small>
+       <small hidden="" id="to-input-empty">
+       </small>
+      </label>
+      <label class="field">
+       <span>
+        Тип поездки
+       </span>
+       <select id="kind-input" name="kind">
+        <option value="">
+         Любой
+        </option>
+        <option value="city">
+         По городу
+        </option>
+        <option value="intercity">
+         Межгород
+        </option>
+        <option value="international">
+         Между странами
+        </option>
+       </select>
+      </label>
+      <div class="field along-cal-field">
+       <span>
+        Дата
+       </span>
+       <input id="date-input" name="date" type="hidden" value=""/>
+       <small hidden="" id="date-error">
+       </small>
+       <div class="along-cal" data-blank="Любая дата" data-calendar="" data-days-id="home-days" data-endpoint="/api/trip-days" data-from="from-input" data-input="date-input" data-kind="kind-input" data-to="to-input">
+        <button class="day-pick__btn is-empty" title="Любая дата" type="button">
+         <span class="day-pick__value">
+          Любая дата
+         </span>
+         <span aria-hidden="true" class="day-pick__chev">
+         </span>
+        </button>
+       </div>
+      </div>
+      <button class="btn btn-primary" type="submit">
+       Найти
+      </button>
+     </form>
+     <div class="service-row" hidden="" id="service-row">
+      <a href="trips.html" id="svc-trips">
+       Найти попутчика
+      </a>
+      <a href="route.html" id="svc-route">
+       Составить оптимизированный маршрут
+      </a>
+      <a href="schedule.html" id="svc-schedule">
+       Расписание автобусов, самолётов и поездов
+      </a>
+      <a href="trip-new.html" id="svc-plan">
+       Запланировать поездку
+      </a>
+     </div>
+    </div>
+   </section>
+   <section class="band reveal is-in">
+    <div class="container split">
+     <div>
+      <p class="kicker">
+       О сервисе
+      </p>
+      <h2>
+       Одна машина на двоих, если маршрут уже совпал.
+      </h2>
+      <p class="lede">
+       ALONG собирает выезды по России и в дружественные страны. Казань здесь один из городов, не единственный. Место в салоне закрепляется только после шага «Подтверждение».
+      </p>
+      <a class="btn btn-primary more" href="trips.html">
+       Смотреть поездки
+      </a>
+     </div>
+     <figure class="portrait">
+      <img alt="Человек за рулём на городской дороге" height="1100" src="assets/images/hero-drive.jpg" width="900"/>
+     </figure>
+    </div>
+   </section>
+   <section class="band reveal is-in" id="how-it-works">
+    <div class="container">
+     <p class="kicker">
+      Как это работает
+     </p>
+     <h2>
+      Четыре шага, и место в машине согласовано.
+     </h2>
+     <ol class="steps-grid">
+      <li>
+       <span class="step-num">
+        01
+       </span>
+       <h3>
+        Заявка
+       </h3>
+       <p>
+        Пассажир указывает, откуда и куда едет, и выбирает день, на который уже есть поездки.
+       </p>
+      </li>
+      <li>
+       <span class="step-num">
+        02
+       </span>
+       <h3>
+        Уточнение
+       </h3>
+       <p>
+        Водитель и пассажир сверяют точку встречи, багаж и удобное время выезда.
+       </p>
+      </li>
+      <li>
+       <span class="step-num">
+        03
+       </span>
+       <h3>
+        План
+       </h3>
+       <p>
+        Маршрут, цена за место и свободные места становятся понятны обоим до посадки.
+       </p>
+      </li>
+      <li>
+       <span class="step-num">
+        04
+       </span>
+       <h3>
+        Подтверждение
+       </h3>
+       <p>
+        Место в салоне закрепляется. Поездка считается согласованной только после этого шага.
+       </p>
+      </li>
+     </ol>
+    </div>
+   </section>
+   <section class="band band-photo reveal is-in">
+    <div class="container">
+     <p class="kicker">
+      Маршруты
+     </p>
+     <h2>
+      Куда едут на этой неделе.
+     </h2>
+     <div class="story-grid">
+      <a class="story" href="#">
+       <div class="story-plate">
+        <figure class="story-sheet">
+         <img alt="Марат Юсупов, маршрут Бишкек — Ташкент" src="assets/images/marat.jpg"/>
+        </figure>
+       </div>
+       <div class="story-meta">
+        <time datetime="2026-11-20T08:00">
+         20 ноября, 08:00
+        </time>
+        <span class="story-pill">
+         есть места
+        </span>
+       </div>
+       <strong>
+        Бишкек → Ташкент · 1600 ₽
+       </strong>
+      </a>
+      <a class="story" href="trip.html">
+       <div class="story-plate">
+        <figure class="story-sheet">
+         <img alt="Елена Воронова, маршрут Москва — Минск" src="assets/images/elena.jpg"/>
+        </figure>
+       </div>
+       <div class="story-meta">
+        <time datetime="2026-11-20T09:10">
+         20 ноября, 09:10
+        </time>
+        <span class="story-pill">
+         есть места
+        </span>
+       </div>
+       <strong>
+        Москва → Минск · 1800 ₽
+       </strong>
+      </a>
+      <a class="story" href="#">
+       <div class="story-plate">
+        <figure class="story-sheet">
+         <img alt="Тимур Хакимов, маршрут Ереван — Баку" src="assets/images/timur.jpg"/>
+        </figure>
+       </div>
+       <div class="story-meta">
+        <time datetime="2026-11-20T11:20">
+         20 ноября, 11:20
+        </time>
+        <span class="story-pill">
+         почти заполнено
+        </span>
+       </div>
+       <strong>
+        Ереван → Баку · 2400 ₽
+       </strong>
+      </a>
+     </div>
+    </div>
+   </section>
+   <section class="band reveal user-reviews is-in" id="user-reviews">
+    <div class="container">
+     <p class="kicker">
+      Отзывы
+     </p>
+     <h2>
+      Отзывы наших пользователей
+     </h2>
+     <div class="reviews-grid">
+      <article class="review-card">
+       <img alt="" class="review-avatar" src="assets/images/alina.jpg"/>
+       <p class="review-card__name">
+        Алина Сафина
+       </p>
+       <p class="review-card__city">
+        Казань
+       </p>
+       <p aria-label="Оценка 5 из 5" class="review-stars">
+        ★★★★★
+       </p>
+       <p>
+        Выехали утром без задержки. В салоне было тихо, и место было ровно то, о котором договорились.
+       </p>
+      </article>
+      <article class="review-card">
+       <img alt="" class="review-avatar" src="assets/images/elena.jpg"/>
+       <p class="review-card__name">
+        Елена Воронова
+       </p>
+       <p class="review-card__city">
+        Москва
+       </p>
+       <p aria-label="Оценка 5 из 5" class="review-stars">
+        ★★★★★
+       </p>
+       <p>
+        Маршрут до Минска совпал с моим. Цену и багаж обсудили заранее, в дороге сюрпризов не было.
+       </p>
+      </article>
+      <article class="review-card">
+       <img alt="" class="review-avatar" src="assets/images/marat.jpg"/>
+       <p class="review-card__name">
+        Марат Юсупов
+       </p>
+       <p class="review-card__city">
+        Бишкек
+       </p>
+       <p aria-label="Оценка 5 из 5" class="review-stars">
+        ★★★★★
+       </p>
+       <p>
+        Нашёл попутчика на нужный день. Встретились у аэропорта, доехали спокойно и вовремя.
+       </p>
+      </article>
+     </div>
+    </div>
+   </section>
+   <button class="map-cursor" hidden="" id="map-cursor" type="button">
+    Двигать карту
+   </button>
+  </main>
+  <div aria-live="polite" class="toasts" id="toasts">
+  </div>
+  <footer class="site-footer">
+   <div class="container footer-grid">
+    <div class="footer-brand">
+     <a aria-label="ALONG" class="logo" href="index.html">
+      <span aria-hidden="true" class="logo-icon">
+       <img alt="" class="logo-img" src="assets/logo.png"/>
+      </span>
+      <span class="logo-word">
+       ALONG
+      </span>
+     </a>
+     <p>
+      ALONG — сервис поиска попутчиков по России и СНГ. Безопасные поездки, проверенные водители, удобный поиск.
+     </p>
+    </div>
+    <div class="footer-cols">
+     <nav aria-label="Разделы" class="footer-links">
+      <a href="index.html">
+       Главная
+      </a>
+      <a href="trips.html">
+       Поездки
+      </a>
+      <a href="schedule.html">
+       Расписание
+      </a>
+      <a href="support.html">
+       Поддержка
+      </a>
+     </nav>
+     <nav aria-label="Аккаунт" class="footer-links">
+      <a href="login.html">
+       Вход
+      </a>
+      <a href="register.html">
+       Регистрация
+      </a>
+      <a href="profile.html">
+       Кабинет
+      </a>
+     </nav>
+    </div>
+   </div>
+   <p class="copy">
+    © 2026 ALONG. Все права защищены.
+   </p>
+  </footer>
+ </body>
+</html>

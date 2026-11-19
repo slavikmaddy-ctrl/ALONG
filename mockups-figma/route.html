@@ -1,0 +1,231 @@
+﻿
+<!DOCTYPE html>
+<html lang="ru">
+ <head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1" name="viewport"/>
+  <title>
+   ALONG — Маршрут
+  </title>
+  <meta content="ALONG — сервис поиска попутчиков по России и СНГ: поездки между городами, расписание транспорта и проверенные водители." name="description"/>
+  <meta content="index, follow" name="robots"/>
+  <meta content="website" property="og:type"/>
+  <meta content="ALONG" property="og:site_name"/>
+  <meta content="ALONG — Маршрут" property="og:title"/>
+  <meta content="ALONG — сервис поиска попутчиков по России и СНГ: поездки между городами, расписание транспорта и проверенные водители." property="og:description"/>
+  <meta content="http://127.0.0.1:5058/route?from=Москва&amp;to=Минск" property="og:url"/>
+  <meta content="http://127.0.0.1:5058/static/logo.png" property="og:image"/>
+  <meta content="summary" name="twitter:card"/>
+  <meta content="ALONG — Маршрут" name="twitter:title"/>
+  <meta content="ALONG — сервис поиска попутчиков по России и СНГ: поездки между городами, расписание транспорта и проверенные водители." name="twitter:description"/>
+  <meta content="#12161c" name="theme-color"/>
+  <link href="assets/icon-192.png" rel="icon" type="image/png"/>
+  <link href="assets/apple-touch-icon.png" rel="apple-touch-icon"/>
+  <link href="https://fonts.googleapis.com" rel="preconnect"/>
+  <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+  <link href="styles.css" rel="stylesheet"/>
+  <link href="mockup.css" rel="stylesheet"/>
+  <link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet"/>
+ </head>
+ <body class="">
+  <a class="skip" href="#content">
+   К содержанию
+  </a>
+  <header class="site-header">
+   <a aria-label="ALONG" class="logo" href="index.html">
+    <span aria-hidden="true" class="logo-icon">
+     <img alt="" class="logo-img" src="assets/logo.png"/>
+    </span>
+    <span class="logo-word">
+     ALONG
+    </span>
+   </a>
+   <nav aria-label="Основное меню" class="site-nav" data-nav="" id="site-nav">
+    <a href="index.html">
+     Главная
+    </a>
+    <a href="trips.html">
+     Поездки
+    </a>
+    <a href="schedule.html">
+     Расписание
+    </a>
+    <a href="login.html">
+     Авторизация
+    </a>
+   </nav>
+  </header>
+  <main class="page-enter" id="content">
+   <section class="page-hero page-hero--evening">
+    <div class="page-hero__copy">
+     <h1>
+      Москва → Минск
+     </h1>
+     <a class="glass-pill" href="#route-panel">
+      К карте
+     </a>
+    </div>
+   </section>
+   <div class="page">
+    <div class="container stack">
+     <section class="card" id="route-panel">
+      <p class="kicker">
+       Маршрут
+      </p>
+      <form action="route.html" class="route-form" method="get">
+       <label class="field">
+        <span>
+         Откуда
+        </span>
+        <input autocomplete="off" list="cities" name="from" placeholder="Город отправления" required="" value="Москва"/>
+       </label>
+       <label class="field">
+        <span>
+         Куда
+        </span>
+        <input autocomplete="off" list="cities" name="to" placeholder="Город назначения" required="" value="Минск"/>
+       </label>
+       <button class="btn btn-primary" type="submit">
+        Построить
+       </button>
+      </form>
+      <datalist id="cities">
+       <option value="Москва">
+        <option value="Санкт-Петербург">
+         <option value="Казань">
+          <option value="Новосибирск">
+           <option value="Екатеринбург">
+            <option value="Нижний Новгород">
+             <option value="Самара">
+              <option value="Уфа">
+               <option value="Ростов-на-Дону">
+                <option value="Краснодар">
+                 <option value="Воронеж">
+                  <option value="Пермь">
+                   <option value="Волгоград">
+                    <option value="Красноярск">
+                     <option value="Сочи">
+                      <option value="Иннополис">
+                       <option value="Минск">
+                        <option value="Гомель">
+                         <option value="Брест">
+                          <option value="Алматы">
+                           <option value="Астана">
+                            <option value="Шымкент">
+                             <option value="Ереван">
+                              <option value="Гюмри">
+                               <option value="Бишкек">
+                                <option value="Ош">
+                                 <option value="Ташкент">
+                                  <option value="Самарканд">
+                                   <option value="Душанбе">
+                                    <option value="Худжанд">
+                                     <option value="Баку">
+                                      <option value="Гянджа">
+                                      </option>
+                                     </option>
+                                    </option>
+                                   </option>
+                                  </option>
+                                 </option>
+                                </option>
+                               </option>
+                              </option>
+                             </option>
+                            </option>
+                           </option>
+                          </option>
+                         </option>
+                        </option>
+                       </option>
+                      </option>
+                     </option>
+                    </option>
+                   </option>
+                  </option>
+                 </option>
+                </option>
+               </option>
+              </option>
+             </option>
+            </option>
+           </option>
+          </option>
+         </option>
+        </option>
+       </option>
+      </datalist>
+      <p style="margin-top: 16px;">
+       Около 718 км в пути, примерно 10 ч за рулём. Линия на карте соединяет выбранные города.
+      </p>
+      <img alt="Карта маршрута" class="route-map" src="assets/map-route.png"/>
+      <a class="btn btn-primary" href="login.html">
+       Сохранить маршрут
+      </a>
+     </section>
+     <section class="card">
+      <h2>
+       Поездки рядом
+      </h2>
+      <p style="margin-top: 8px;">
+       <a class="text-link" href="trip.html">
+        20 ноября, 09:10 · Москва → Минск
+       </a>
+       · Елена Воронова
+      </p>
+     </section>
+    </div>
+   </div>
+  </main>
+  <div aria-live="polite" class="toasts" id="toasts">
+  </div>
+  <footer class="site-footer">
+   <div class="container footer-grid">
+    <div class="footer-brand">
+     <a aria-label="ALONG" class="logo" href="index.html">
+      <span aria-hidden="true" class="logo-icon">
+       <img alt="" class="logo-img" src="assets/logo.png"/>
+      </span>
+      <span class="logo-word">
+       ALONG
+      </span>
+     </a>
+     <p>
+      ALONG — сервис поиска попутчиков по России и СНГ. Безопасные поездки, проверенные водители, удобный поиск.
+     </p>
+    </div>
+    <div class="footer-cols">
+     <nav aria-label="Разделы" class="footer-links">
+      <a href="index.html">
+       Главная
+      </a>
+      <a href="trips.html">
+       Поездки
+      </a>
+      <a href="schedule.html">
+       Расписание
+      </a>
+      <a href="support.html">
+       Поддержка
+      </a>
+     </nav>
+     <nav aria-label="Аккаунт" class="footer-links">
+      <a href="login.html">
+       Вход
+      </a>
+      <a href="register.html">
+       Регистрация
+      </a>
+      <a href="profile.html">
+       Кабинет
+      </a>
+     </nav>
+    </div>
+   </div>
+   <p class="copy">
+    © 2026 ALONG. Все права защищены.
+   </p>
+  </footer>
+ </body>
+</html>

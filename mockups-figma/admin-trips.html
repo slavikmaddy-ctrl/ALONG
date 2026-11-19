@@ -1,0 +1,399 @@
+﻿﻿
+<!DOCTYPE html>
+<html lang="ru">
+ <head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1" name="viewport"/>
+  <title>
+   ALONG — Поездки
+  </title>
+  <meta content="ALONG — сервис поиска попутчиков по России и СНГ: поездки между городами, расписание транспорта и проверенные водители." name="description"/>
+  <meta content="noindex, nofollow" name="robots"/>
+  <meta content="website" property="og:type"/>
+  <meta content="ALONG" property="og:site_name"/>
+  <meta content="ALONG — Поездки" property="og:title"/>
+  <meta content="ALONG — сервис поиска попутчиков по России и СНГ: поездки между городами, расписание транспорта и проверенные водители." property="og:description"/>
+  <meta content="http://127.0.0.1:5058/admin/trips" property="og:url"/>
+  <meta content="http://127.0.0.1:5058/static/logo.png" property="og:image"/>
+  <meta content="summary" name="twitter:card"/>
+  <meta content="ALONG — Поездки" name="twitter:title"/>
+  <meta content="ALONG — сервис поиска попутчиков по России и СНГ: поездки между городами, расписание транспорта и проверенные водители." name="twitter:description"/>
+  <meta content="#12161c" name="theme-color"/>
+  <link href="assets/icon-192.png" rel="icon" type="image/png"/>
+  <link href="assets/apple-touch-icon.png" rel="apple-touch-icon"/>
+  <link href="https://fonts.googleapis.com" rel="preconnect"/>
+  <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+  <link href="styles.css" rel="stylesheet"/>
+  <link href="mockup.css" rel="stylesheet"/>
+ </head>
+ <body class="is-admin">
+  <a class="skip" href="#content">
+   К содержанию
+  </a>
+  <header class="site-header">
+   <a aria-label="ALONG" class="logo" href="index.html">
+    <span aria-hidden="true" class="logo-icon">
+     <img alt="" class="logo-img" src="assets/logo.png"/>
+    </span>
+    <span class="logo-word">
+     ALONG
+    </span>
+   </a>
+   <nav aria-label="Основное меню" class="site-nav" data-nav="" id="site-nav">
+    <a href="index.html">
+     Главная
+    </a>
+    <a href="trips.html">
+     Поездки
+    </a>
+    <a href="schedule.html">
+     Расписание
+    </a>
+    <a href="#">
+     Сообщения
+    </a>
+    <a href="profile.html">
+     Кабинет
+    </a>
+    <form action="#" method="post">
+     <button class="nav-logout" type="submit">
+      Выйти
+     </button>
+    </form>
+   </nav>
+  </header>
+  <main class="page-enter" id="content">
+   <div class="admin-app" id="admin-panel">
+    <div class="admin-wrap">
+     <header class="admin-head">
+      <h1>
+       Поездки
+      </h1>
+      <nav aria-label="Разделы панели" class="admin-nav">
+       <a href="admin.html">
+        Обзор
+       </a>
+       <a aria-current="page" href="admin-trips.html">
+        Поездки
+       </a>
+       <a href="#">
+        Расписание
+       </a>
+       <a href="#">
+        Отзывы
+       </a>
+       <a href="#">
+        Пользователи
+       </a>
+       <a href="#">
+        Сообщения
+       </a>
+       <a href="#">
+        Жалобы
+       </a>
+       <a href="#">
+        Поддержка
+       </a>
+       <a href="#">
+        Журнал
+       </a>
+       <a href="index.html">
+        На сайт
+       </a>
+      </nav>
+     </header>
+     <div class="admin-body">
+      <div class="admin-toolbar">
+       <div>
+        <p class="eyebrow">
+         Все поездки, включая скрытые
+        </p>
+        <form class="pager admin-filter" method="get">
+         <label class="field">
+          <span>
+           Статус
+          </span>
+          <select name="status" onchange="this.form.submit()">
+           <option value="">
+            все
+           </option>
+           <option value="open">
+            открыта
+           </option>
+           <option value="hidden">
+            скрыта
+           </option>
+           <option value="cancelled">
+            отменена
+           </option>
+          </select>
+         </label>
+        </form>
+       </div>
+       <div class="admin-toolbar__actions">
+        <a class="btn btn-ghost" href="#">
+         Экспорт CSV
+        </a>
+        <a class="btn btn-primary" href="#">
+         Создать поездку
+        </a>
+       </div>
+      </div>
+      <div class="admin-table-wrap">
+       <table class="admin-table">
+        <thead>
+         <tr>
+          <th>
+           Когда
+          </th>
+          <th>
+           Маршрут
+          </th>
+          <th>
+           Водитель
+          </th>
+          <th>
+           Места
+          </th>
+          <th>
+           Статус
+          </th>
+          <th>
+           Действия
+          </th>
+         </tr>
+        </thead>
+        <tbody>
+         <tr>
+          <td data-label="Когда">
+           21 ноября, 18:30
+          </td>
+          <td data-label="Маршрут">
+           <a class="text-link" href="#">
+            Казань → Иннополис
+           </a>
+          </td>
+          <td data-label="Водитель">
+           Алина Сафина
+          </td>
+          <td data-label="Места">
+           0/3
+          </td>
+          <td data-label="Статус">
+           <span class="badge badge-muted">
+            мест нет
+           </span>
+          </td>
+          <td class="admin-actions" data-label="Действия">
+           <a class="text-link" href="#">
+            Изменить
+           </a>
+           <a class="text-link" href="#">
+            Скрыть
+           </a>
+          </td>
+         </tr>
+         <tr>
+          <td data-label="Когда">
+           20 ноября, 11:20
+          </td>
+          <td data-label="Маршрут">
+           <a class="text-link" href="#">
+            Ереван → Баку
+           </a>
+          </td>
+          <td data-label="Водитель">
+           Тимур Хакимов
+          </td>
+          <td data-label="Места">
+           1/2
+          </td>
+          <td data-label="Статус">
+           <span class="badge badge-lime">
+            почти заполнено
+           </span>
+          </td>
+          <td class="admin-actions" data-label="Действия">
+           <a class="text-link" href="#">
+            Изменить
+           </a>
+           <a class="text-link" href="#">
+            Скрыть
+           </a>
+          </td>
+         </tr>
+         <tr>
+          <td data-label="Когда">
+           20 ноября, 09:10
+          </td>
+          <td data-label="Маршрут">
+           <a class="text-link" href="#">
+            Москва → Минск
+           </a>
+          </td>
+          <td data-label="Водитель">
+           Елена Воронова
+          </td>
+          <td data-label="Места">
+           3/3
+          </td>
+          <td data-label="Статус">
+           <span class="badge badge-ok">
+            есть места
+           </span>
+          </td>
+          <td class="admin-actions" data-label="Действия">
+           <a class="text-link" href="#">
+            Изменить
+           </a>
+           <a class="text-link" href="#">
+            Скрыть
+           </a>
+          </td>
+         </tr>
+         <tr>
+          <td data-label="Когда">
+           20 ноября, 08:00
+          </td>
+          <td data-label="Маршрут">
+           <a class="text-link" href="#">
+            Бишкек → Ташкент
+           </a>
+          </td>
+          <td data-label="Водитель">
+           Марат Юсупов
+          </td>
+          <td data-label="Места">
+           3/3
+          </td>
+          <td data-label="Статус">
+           <span class="badge badge-ok">
+            есть места
+           </span>
+          </td>
+          <td class="admin-actions" data-label="Действия">
+           <a class="text-link" href="#">
+            Изменить
+           </a>
+           <a class="text-link" href="#">
+            Скрыть
+           </a>
+          </td>
+         </tr>
+         <tr>
+          <td data-label="Когда">
+           18 ноября, 07:40
+          </td>
+          <td data-label="Маршрут">
+           <a class="text-link" href="#">
+            Казань → Алматы
+           </a>
+          </td>
+          <td data-label="Водитель">
+           Алина Сафина
+          </td>
+          <td data-label="Места">
+           2/3
+          </td>
+          <td data-label="Статус">
+           <span class="badge badge-muted">
+            завершена
+           </span>
+          </td>
+          <td class="admin-actions" data-label="Действия">
+           <a class="text-link" href="#">
+            Изменить
+           </a>
+           <a class="text-link" href="#">
+            Скрыть
+           </a>
+          </td>
+         </tr>
+         <tr>
+          <td data-label="Когда">
+           18 ноября, 06:50
+          </td>
+          <td data-label="Маршрут">
+           <a class="text-link" href="#">
+            Москва → Астана
+           </a>
+          </td>
+          <td data-label="Водитель">
+           Елена Воронова
+          </td>
+          <td data-label="Места">
+           2/2
+          </td>
+          <td data-label="Статус">
+           <span class="badge badge-muted">
+            скрыта
+           </span>
+          </td>
+          <td class="admin-actions" data-label="Действия">
+           <a class="text-link" href="#">
+            Изменить
+           </a>
+           <a class="text-link" href="#">
+            Вернуть
+           </a>
+          </td>
+         </tr>
+        </tbody>
+       </table>
+      </div>
+     </div>
+    </div>
+   </div>
+  </main>
+  <div aria-live="polite" class="toasts" id="toasts">
+  </div>
+  <footer class="site-footer">
+   <div class="container footer-grid">
+    <div class="footer-brand">
+     <a aria-label="ALONG" class="logo" href="index.html">
+      <span aria-hidden="true" class="logo-icon">
+       <img alt="" class="logo-img" src="assets/logo.png"/>
+      </span>
+      <span class="logo-word">
+       ALONG
+      </span>
+     </a>
+     <p>
+      ALONG — сервис поиска попутчиков по России и СНГ. Безопасные поездки, проверенные водители, удобный поиск.
+     </p>
+    </div>
+    <div class="footer-cols">
+     <nav aria-label="Разделы" class="footer-links">
+      <a href="index.html">
+       Главная
+      </a>
+      <a href="trips.html">
+       Поездки
+      </a>
+      <a href="schedule.html">
+       Расписание
+      </a>
+      <a href="support.html">
+       Поддержка
+      </a>
+     </nav>
+     <nav aria-label="Аккаунт" class="footer-links">
+      <a href="login.html">
+       Вход
+      </a>
+      <a href="register.html">
+       Регистрация
+      </a>
+      <a href="profile.html">
+       Кабинет
+      </a>
+     </nav>
+    </div>
+   </div>
+   <p class="copy">
+    © 2026 ALONG. Все права защищены.
+   </p>
+  </footer>
+ </body>
+</html>

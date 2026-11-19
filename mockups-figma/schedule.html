@@ -1,0 +1,212 @@
+﻿﻿
+<!DOCTYPE html>
+<html lang="ru">
+ <head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1" name="viewport"/>
+  <title>
+   ALONG — Расписание
+  </title>
+  <meta content="ALONG — сервис поиска попутчиков по России и СНГ: поездки между городами, расписание транспорта и проверенные водители." name="description"/>
+  <meta content="index, follow" name="robots"/>
+  <meta content="website" property="og:type"/>
+  <meta content="ALONG" property="og:site_name"/>
+  <meta content="ALONG — Расписание" property="og:title"/>
+  <meta content="ALONG — сервис поиска попутчиков по России и СНГ: поездки между городами, расписание транспорта и проверенные водители." property="og:description"/>
+  <meta content="http://127.0.0.1:5058/schedule" property="og:url"/>
+  <meta content="http://127.0.0.1:5058/static/logo.png" property="og:image"/>
+  <meta content="summary" name="twitter:card"/>
+  <meta content="ALONG — Расписание" name="twitter:title"/>
+  <meta content="ALONG — сервис поиска попутчиков по России и СНГ: поездки между городами, расписание транспорта и проверенные водители." name="twitter:description"/>
+  <meta content="#12161c" name="theme-color"/>
+  <link href="assets/icon-192.png" rel="icon" type="image/png"/>
+  <link href="assets/apple-touch-icon.png" rel="apple-touch-icon"/>
+  <link href="https://fonts.googleapis.com" rel="preconnect"/>
+  <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+  <link href="styles.css" rel="stylesheet"/>
+  <link href="mockup.css" rel="stylesheet"/>
+ </head>
+ <body class="">
+  <a class="skip" href="#content">
+   К содержанию
+  </a>
+  <header class="site-header">
+   <a aria-label="ALONG" class="logo" href="index.html">
+    <span aria-hidden="true" class="logo-icon">
+     <img alt="" class="logo-img" src="assets/logo.png"/>
+    </span>
+    <span class="logo-word">
+     ALONG
+    </span>
+   </a>
+   <nav aria-label="Основное меню" class="site-nav" data-nav="" id="site-nav">
+    <a href="index.html">
+     Главная
+    </a>
+    <a href="trips.html">
+     Поездки
+    </a>
+    <a aria-current="page" href="schedule.html">
+     Расписание
+    </a>
+    <a href="login.html">
+     Авторизация
+    </a>
+   </nav>
+  </header>
+  <main class="page-enter" id="content">
+   <section class="page-hero page-hero--station schedule-hero">
+    <div class="page-hero__copy">
+     <h1>
+      Автобусы, самолёты и поезда
+     </h1>
+     <a class="glass-pill" href="#timetable">
+      К рейсам
+     </a>
+    </div>
+   </section>
+   <div class="page" id="timetable">
+    <div class="container stack">
+     <section class="card filter-card">
+      <p class="eyebrow">
+       Справка
+      </p>
+      <p class="lede">
+       Место в рейсе через ALONG не бронируется. Это справочник.
+      </p>
+      <div aria-label="Вид транспорта" class="mode-switch" role="tablist">
+       <a aria-current="page" class="mode-switch__tab is-on" href="schedule.html">
+        Автобус
+       </a>
+       <a class="mode-switch__tab" href="schedule.html">
+        Самолёт
+       </a>
+       <a class="mode-switch__tab" href="schedule.html">
+        Поезд
+       </a>
+      </div>
+      <form class="filters" method="get">
+       <input name="mode" type="hidden" value="bus"/>
+       <label class="field">
+        <span>
+         Откуда
+        </span>
+        <input id="sched-from" name="from" placeholder="Город или адрес" value=""/>
+       </label>
+       <label class="field">
+        <span>
+         Куда
+        </span>
+        <input id="sched-to" name="to" placeholder="Город или адрес" value=""/>
+       </label>
+       <div class="field along-cal-field">
+        <span>
+         Дата
+        </span>
+        <input id="schedule-date" name="date" type="hidden" value="2026-11-20"/>
+        <div class="along-cal" data-blank="Любая дата" data-calendar="" data-days-id="schedule-days" data-endpoint="/api/schedule-days" data-from="sched-from" data-input="schedule-date" data-mode="bus" data-submit="1" data-to="sched-to">
+         <button class="day-pick__btn" title="20 ноября 2026" type="button">
+          <span class="day-pick__value">
+           20 ноября 2026
+          </span>
+          <span aria-hidden="true" class="day-pick__chev">
+          </span>
+         </button>
+        </div>
+       </div>
+       <button class="btn btn-primary" type="submit">
+        Показать
+       </button>
+      </form>
+     </section>
+     <section class="card schedule-board schedule-board--list">
+      <ul class="rides">
+       <li class="ride-item">
+        <span class="t">
+         08:15
+        </span>
+        <span class="ride-route">
+         <strong>
+          Автобус, ночной
+         </strong>
+         <small>
+          Москва → Минск
+         </small>
+        </span>
+        <span class="badge badge-ok">
+         есть места
+        </span>
+       </li>
+       <li class="ride-item">
+        <span class="t">
+         19:15
+        </span>
+        <span class="ride-route">
+         <strong>
+          Автобус
+         </strong>
+         <small>
+          Казань → Алматы
+         </small>
+        </span>
+        <span class="badge badge-ok">
+         есть места
+        </span>
+       </li>
+      </ul>
+     </section>
+    </div>
+   </div>
+  </main>
+  <div aria-live="polite" class="toasts" id="toasts">
+  </div>
+  <footer class="site-footer">
+   <div class="container footer-grid">
+    <div class="footer-brand">
+     <a aria-label="ALONG" class="logo" href="index.html">
+      <span aria-hidden="true" class="logo-icon">
+       <img alt="" class="logo-img" src="assets/logo.png"/>
+      </span>
+      <span class="logo-word">
+       ALONG
+      </span>
+     </a>
+     <p>
+      ALONG — сервис поиска попутчиков по России и СНГ. Безопасные поездки, проверенные водители, удобный поиск.
+     </p>
+    </div>
+    <div class="footer-cols">
+     <nav aria-label="Разделы" class="footer-links">
+      <a href="index.html">
+       Главная
+      </a>
+      <a href="trips.html">
+       Поездки
+      </a>
+      <a href="schedule.html">
+       Расписание
+      </a>
+      <a href="support.html">
+       Поддержка
+      </a>
+     </nav>
+     <nav aria-label="Аккаунт" class="footer-links">
+      <a href="login.html">
+       Вход
+      </a>
+      <a href="register.html">
+       Регистрация
+      </a>
+      <a href="profile.html">
+       Кабинет
+      </a>
+     </nav>
+    </div>
+   </div>
+   <p class="copy">
+    © 2026 ALONG. Все права защищены.
+   </p>
+  </footer>
+ </body>
+</html>

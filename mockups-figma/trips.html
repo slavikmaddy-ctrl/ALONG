@@ -1,0 +1,454 @@
+﻿﻿
+<!DOCTYPE html>
+<html lang="ru">
+ <head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1" name="viewport"/>
+  <title>
+   ALONG — Поездки
+  </title>
+  <meta content="ALONG — сервис поиска попутчиков по России и СНГ: поездки между городами, расписание транспорта и проверенные водители." name="description"/>
+  <meta content="index, follow" name="robots"/>
+  <meta content="website" property="og:type"/>
+  <meta content="ALONG" property="og:site_name"/>
+  <meta content="ALONG — Поездки" property="og:title"/>
+  <meta content="ALONG — сервис поиска попутчиков по России и СНГ: поездки между городами, расписание транспорта и проверенные водители." property="og:description"/>
+  <meta content="http://127.0.0.1:5058/trips" property="og:url"/>
+  <meta content="http://127.0.0.1:5058/static/logo.png" property="og:image"/>
+  <meta content="summary" name="twitter:card"/>
+  <meta content="ALONG — Поездки" name="twitter:title"/>
+  <meta content="ALONG — сервис поиска попутчиков по России и СНГ: поездки между городами, расписание транспорта и проверенные водители." name="twitter:description"/>
+  <meta content="#12161c" name="theme-color"/>
+  <link href="assets/icon-192.png" rel="icon" type="image/png"/>
+  <link href="assets/apple-touch-icon.png" rel="apple-touch-icon"/>
+  <link href="https://fonts.googleapis.com" rel="preconnect"/>
+  <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+  <link href="styles.css" rel="stylesheet"/>
+  <link href="mockup.css" rel="stylesheet"/>
+ </head>
+ <body class="">
+  <a class="skip" href="#content">
+   К содержанию
+  </a>
+  <header class="site-header">
+   <a aria-label="ALONG" class="logo" href="index.html">
+    <span aria-hidden="true" class="logo-icon">
+     <img alt="" class="logo-img" src="assets/logo.png"/>
+    </span>
+    <span class="logo-word">
+     ALONG
+    </span>
+   </a>
+   <nav aria-label="Основное меню" class="site-nav" data-nav="" id="site-nav">
+    <a href="index.html">
+     Главная
+    </a>
+    <a aria-current="page" href="trips.html">
+     Поездки
+    </a>
+    <a href="schedule.html">
+     Расписание
+    </a>
+    <a href="login.html">
+     Авторизация
+    </a>
+   </nav>
+  </header>
+  <main class="page-enter" id="content">
+   <section class="page-hero page-hero--road">
+    <div class="page-hero__copy">
+     <h1>
+      Все города
+     </h1>
+     <a class="glass-pill" href="#trip-results">
+      Смотреть места
+     </a>
+    </div>
+   </section>
+   <div class="page" id="trip-results">
+    <div class="container stack">
+     <section class="card">
+      <p class="eyebrow">
+       Поиск попутчика
+      </p>
+      <p class="lede">
+       Открытые поездки. Бронь без входа не создаётся.
+      </p>
+      <form action="trips.html" class="filters filters--search" method="get" style="margin-top: 14px;">
+       <div class="filters__route">
+        <label class="field">
+         <span>
+          Откуда
+         </span>
+         <input autocomplete="off" id="filter-from" list="cities" name="from" placeholder="Город или адрес" value=""/>
+        </label>
+        <label class="field">
+         <span>
+          Куда
+         </span>
+         <input autocomplete="off" id="filter-to" list="cities" name="to" placeholder="Город или адрес" value=""/>
+        </label>
+       </div>
+       <datalist id="cities">
+        <option value="Москва">
+         <option value="Санкт-Петербург">
+          <option value="Казань">
+           <option value="Новосибирск">
+            <option value="Екатеринбург">
+             <option value="Нижний Новгород">
+              <option value="Самара">
+               <option value="Уфа">
+                <option value="Ростов-на-Дону">
+                 <option value="Краснодар">
+                  <option value="Воронеж">
+                   <option value="Пермь">
+                    <option value="Волгоград">
+                     <option value="Красноярск">
+                      <option value="Сочи">
+                       <option value="Иннополис">
+                        <option value="Минск">
+                         <option value="Гомель">
+                          <option value="Брест">
+                           <option value="Алматы">
+                            <option value="Астана">
+                             <option value="Шымкент">
+                              <option value="Ереван">
+                               <option value="Гюмри">
+                                <option value="Бишкек">
+                                 <option value="Ош">
+                                  <option value="Ташкент">
+                                   <option value="Самарканд">
+                                    <option value="Душанбе">
+                                     <option value="Худжанд">
+                                      <option value="Баку">
+                                       <option value="Гянджа">
+                                       </option>
+                                      </option>
+                                     </option>
+                                    </option>
+                                   </option>
+                                  </option>
+                                 </option>
+                                </option>
+                               </option>
+                              </option>
+                             </option>
+                            </option>
+                           </option>
+                          </option>
+                         </option>
+                        </option>
+                       </option>
+                      </option>
+                     </option>
+                    </option>
+                   </option>
+                  </option>
+                 </option>
+                </option>
+               </option>
+              </option>
+             </option>
+            </option>
+           </option>
+          </option>
+         </option>
+        </option>
+       </datalist>
+       <input id="filter-from-lat" name="from_lat" type="hidden" value=""/>
+       <input id="filter-from-lon" name="from_lon" type="hidden" value=""/>
+       <input id="filter-to-lat" name="to_lat" type="hidden" value=""/>
+       <input id="filter-to-lon" name="to_lon" type="hidden" value=""/>
+       <label class="field">
+        <span>
+         Тип поездки
+        </span>
+        <select id="kind-input" name="kind">
+         <option value="">
+          Любой
+         </option>
+         <option value="city">
+          По городу
+         </option>
+         <option value="intercity">
+          Межгород
+         </option>
+         <option value="international">
+          Между странами
+         </option>
+        </select>
+       </label>
+       <div class="field along-cal-field">
+        <span>
+         Дата
+        </span>
+        <input data-trip-date="" id="trip-date" name="date" type="hidden" value=""/>
+        <div class="along-cal" data-blank="Любая дата" data-calendar="" data-days-id="trip-days" data-endpoint="/api/trip-days" data-from="filter-from" data-from-lat="filter-from-lat" data-from-lon="filter-from-lon" data-input="trip-date" data-kind="kind-input" data-submit="feed" data-to="filter-to">
+         <button class="day-pick__btn is-empty" title="Любая дата" type="button">
+          <span class="day-pick__value">
+           Любая дата
+          </span>
+          <span aria-hidden="true" class="day-pick__chev">
+          </span>
+         </button>
+        </div>
+       </div>
+       <label class="field">
+        <span>
+         Мест не меньше
+        </span>
+        <select name="seats">
+         <option value="">
+          любое
+         </option>
+         <option value="1">
+          1
+         </option>
+         <option value="2">
+          2
+         </option>
+         <option value="3">
+          3
+         </option>
+        </select>
+       </label>
+       <label class="field">
+        <span>
+         Цена до
+        </span>
+        <select name="price">
+         <option value="">
+          любая
+         </option>
+         <option value="500">
+          500 ₽
+         </option>
+         <option value="2000">
+          2000 ₽
+         </option>
+         <option value="5000">
+          5000 ₽
+         </option>
+        </select>
+       </label>
+       <button class="btn btn-primary" type="submit">
+        Показать
+       </button>
+       <div class="date-pills" data-date-pills="">
+        <span class="date-pills__label">
+         Быстрый выбор
+        </span>
+        <button class="date-pill" data-date-preset="today" type="button">
+         Сегодня
+        </button>
+        <button class="date-pill" data-date-preset="tomorrow" type="button">
+         Завтра
+        </button>
+        <button class="date-pill" data-date-preset="weekend" type="button">
+         Выходные
+        </button>
+       </div>
+      </form>
+     </section>
+     <div data-trip-feed="">
+      <div class="trip-toolbar">
+       <p class="trip-count">
+        Найдено 4
+        
+        поездки
+       </p>
+       <div aria-label="Сортировка поездок" class="trip-sort" role="group">
+        <a aria-current="true" class="trip-sort__link is-on" href="trips.html">
+         Сначала ранние
+        </a>
+        <a class="trip-sort__link" href="trips.html">
+         Сначала дешёвые
+        </a>
+       </div>
+      </div>
+      <div class="trip-list">
+       <article class="trip-row" data-date="2026-11-20">
+        <img alt="Марат Юсупов" class="trip-photo" src="assets/images/marat.jpg"/>
+        <div class="when">
+         <strong>
+          08:00
+         </strong>
+         <span>
+          20 ноября
+         </span>
+        </div>
+        <div class="trip-main">
+         <h2>
+          <a class="text-link" href="#">
+           Бишкек → Ташкент
+          </a>
+         </h2>
+         <p>
+          Марат Юсупов · Volkswagen Polo, синий · свободно 3
+         </p>
+        </div>
+        <div class="trip-side">
+         <span class="price">
+          1600 ₽
+         </span>
+         <span class="badge badge-ok">
+          есть места
+         </span>
+         <a class="text-link" href="#">
+          Открыть
+         </a>
+        </div>
+       </article>
+       <article class="trip-row" data-date="2026-11-20">
+        <img alt="Елена Воронова" class="trip-photo" src="assets/images/elena.jpg"/>
+        <div class="when">
+         <strong>
+          09:10
+         </strong>
+         <span>
+          20 ноября
+         </span>
+        </div>
+        <div class="trip-main">
+         <h2>
+          <a class="text-link" href="trip.html">
+           Москва → Минск
+          </a>
+         </h2>
+         <p>
+          Елена Воронова · Hyundai Solaris, белый · свободно 3
+         </p>
+        </div>
+        <div class="trip-side">
+         <span class="price">
+          1800 ₽
+         </span>
+         <span class="badge badge-ok">
+          есть места
+         </span>
+         <a class="text-link" href="trip.html">
+          Открыть
+         </a>
+        </div>
+       </article>
+       <article class="trip-row" data-date="2026-11-20">
+        <img alt="Тимур Хакимов" class="trip-photo" src="assets/images/timur.jpg"/>
+        <div class="when">
+         <strong>
+          11:20
+         </strong>
+         <span>
+          20 ноября
+         </span>
+        </div>
+        <div class="trip-main">
+         <h2>
+          <a class="text-link" href="#">
+           Ереван → Баку
+          </a>
+         </h2>
+         <p>
+          Тимур Хакимов · Skoda Octavia, серая · свободно 1
+         </p>
+        </div>
+        <div class="trip-side">
+         <span class="price">
+          2400 ₽
+         </span>
+         <span class="badge badge-lime">
+          почти заполнено
+         </span>
+         <a class="text-link" href="#">
+          Открыть
+         </a>
+        </div>
+       </article>
+       <article class="trip-row" data-date="2026-11-21">
+        <img alt="Алина Сафина" class="trip-photo" src="assets/images/alina.jpg"/>
+        <div class="when">
+         <strong>
+          18:30
+         </strong>
+         <span>
+          21 ноября
+         </span>
+        </div>
+        <div class="trip-main">
+         <h2>
+          <a class="text-link" href="#">
+           Казань → Иннополис
+          </a>
+         </h2>
+         <p>
+          Алина Сафина · Kia Ceed, 2021, серый · свободно 0
+         </p>
+        </div>
+        <div class="trip-side">
+         <span class="price">
+          350 ₽
+         </span>
+         <span class="badge badge-ok">
+          мест нет
+         </span>
+         <a class="text-link" href="#">
+          Открыть
+         </a>
+        </div>
+       </article>
+      </div>
+     </div>
+    </div>
+   </div>
+  </main>
+  <div aria-live="polite" class="toasts" id="toasts">
+  </div>
+  <footer class="site-footer">
+   <div class="container footer-grid">
+    <div class="footer-brand">
+     <a aria-label="ALONG" class="logo" href="index.html">
+      <span aria-hidden="true" class="logo-icon">
+       <img alt="" class="logo-img" src="assets/logo.png"/>
+      </span>
+      <span class="logo-word">
+       ALONG
+      </span>
+     </a>
+     <p>
+      ALONG — сервис поиска попутчиков по России и СНГ. Безопасные поездки, проверенные водители, удобный поиск.
+     </p>
+    </div>
+    <div class="footer-cols">
+     <nav aria-label="Разделы" class="footer-links">
+      <a href="index.html">
+       Главная
+      </a>
+      <a href="trips.html">
+       Поездки
+      </a>
+      <a href="schedule.html">
+       Расписание
+      </a>
+      <a href="support.html">
+       Поддержка
+      </a>
+     </nav>
+     <nav aria-label="Аккаунт" class="footer-links">
+      <a href="login.html">
+       Вход
+      </a>
+      <a href="register.html">
+       Регистрация
+      </a>
+      <a href="profile.html">
+       Кабинет
+      </a>
+     </nav>
+    </div>
+   </div>
+   <p class="copy">
+    © 2026 ALONG. Все права защищены.
+   </p>
+  </footer>
+ </body>
+</html>

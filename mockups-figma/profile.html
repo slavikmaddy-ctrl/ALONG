@@ -1,0 +1,398 @@
+﻿﻿
+<!DOCTYPE html>
+<html lang="ru">
+ <head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1" name="viewport"/>
+  <title>
+   ALONG — Профиль
+  </title>
+  <meta content="ALONG — сервис поиска попутчиков по России и СНГ: поездки между городами, расписание транспорта и проверенные водители." name="description"/>
+  <meta content="noindex, nofollow" name="robots"/>
+  <meta content="website" property="og:type"/>
+  <meta content="ALONG" property="og:site_name"/>
+  <meta content="ALONG — Профиль" property="og:title"/>
+  <meta content="ALONG — сервис поиска попутчиков по России и СНГ: поездки между городами, расписание транспорта и проверенные водители." property="og:description"/>
+  <meta content="http://127.0.0.1:5058/me" property="og:url"/>
+  <meta content="http://127.0.0.1:5058/static/logo.png" property="og:image"/>
+  <meta content="summary" name="twitter:card"/>
+  <meta content="ALONG — Профиль" name="twitter:title"/>
+  <meta content="ALONG — сервис поиска попутчиков по России и СНГ: поездки между городами, расписание транспорта и проверенные водители." name="twitter:description"/>
+  <meta content="#12161c" name="theme-color"/>
+  <link href="assets/icon-192.png" rel="icon" type="image/png"/>
+  <link href="assets/apple-touch-icon.png" rel="apple-touch-icon"/>
+  <link href="https://fonts.googleapis.com" rel="preconnect"/>
+  <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+  <link href="styles.css" rel="stylesheet"/>
+  <link href="mockup.css" rel="stylesheet"/>
+ </head>
+ <body class="">
+  <a class="skip" href="#content">
+   К содержанию
+  </a>
+  <header class="site-header">
+   <a aria-label="ALONG" class="logo" href="index.html">
+    <span aria-hidden="true" class="logo-icon">
+     <img alt="" class="logo-img" src="assets/logo.png"/>
+    </span>
+    <span class="logo-word">
+     ALONG
+    </span>
+   </a>
+   <nav aria-label="Основное меню" class="site-nav" data-nav="" id="site-nav">
+    <a href="index.html">
+     Главная
+    </a>
+    <a href="trips.html">
+     Поездки
+    </a>
+    <a href="schedule.html">
+     Расписание
+    </a>
+    <a href="#">
+     Сообщения
+    </a>
+    <a aria-current="page" href="profile.html">
+     Кабинет
+    </a>
+    <form action="#" method="post">
+     <button class="nav-logout" type="submit">
+      Выйти
+     </button>
+    </form>
+   </nav>
+  </header>
+  <main class="page-enter" id="content">
+   <section class="page-hero page-hero--city">
+    <div class="page-hero__copy">
+     <h1>
+      Кабинет
+     </h1>
+     <a class="glass-pill" href="#cabinet">
+      Мои данные
+     </a>
+    </div>
+   </section>
+   <div class="page" id="cabinet">
+    <div class="container stack">
+     <section class="card">
+      <h2>
+       Мой профиль
+      </h2>
+      <form class="form-grid" method="post" style="margin-top: 12px;">
+       <label class="field">
+        <span>
+         Имя
+        </span>
+        <input autocomplete="name" maxlength="200" name="name" required="" value="Дина Каримова"/>
+       </label>
+       <label class="field">
+        <span>
+         Город
+        </span>
+        <input autocomplete="address-level2" list="cities" name="city" required="" value="Казань"/>
+        <datalist id="cities">
+         <option value="Москва">
+          <option value="Санкт-Петербург">
+           <option value="Казань">
+            <option value="Новосибирск">
+             <option value="Екатеринбург">
+              <option value="Нижний Новгород">
+               <option value="Самара">
+                <option value="Уфа">
+                 <option value="Ростов-на-Дону">
+                  <option value="Краснодар">
+                   <option value="Воронеж">
+                    <option value="Пермь">
+                     <option value="Волгоград">
+                      <option value="Красноярск">
+                       <option value="Сочи">
+                        <option value="Иннополис">
+                         <option value="Минск">
+                          <option value="Гомель">
+                           <option value="Брест">
+                            <option value="Алматы">
+                             <option value="Астана">
+                              <option value="Шымкент">
+                               <option value="Ереван">
+                                <option value="Гюмри">
+                                 <option value="Бишкек">
+                                  <option value="Ош">
+                                   <option value="Ташкент">
+                                    <option value="Самарканд">
+                                     <option value="Душанбе">
+                                      <option value="Худжанд">
+                                       <option value="Баку">
+                                        <option value="Гянджа">
+                                        </option>
+                                       </option>
+                                      </option>
+                                     </option>
+                                    </option>
+                                   </option>
+                                  </option>
+                                 </option>
+                                </option>
+                               </option>
+                              </option>
+                             </option>
+                            </option>
+                           </option>
+                          </option>
+                         </option>
+                        </option>
+                       </option>
+                      </option>
+                     </option>
+                    </option>
+                   </option>
+                  </option>
+                 </option>
+                </option>
+               </option>
+              </option>
+             </option>
+            </option>
+           </option>
+          </option>
+         </option>
+        </datalist>
+       </label>
+       <label class="field">
+        <span>
+         Телефон
+        </span>
+        <input autocomplete="tel" inputmode="tel" maxlength="30" name="phone" placeholder="+79000000000" type="tel" value=""/>
+       </label>
+       <label class="field">
+        <span>
+         Машина
+        </span>
+        <input maxlength="200" name="car" value=""/>
+       </label>
+       <label class="field is-wide">
+        <span>
+         О себе
+        </span>
+        <textarea maxlength="1000" name="about">Ищу попутчиков по России и в соседние страны.</textarea>
+       </label>
+       <button class="btn btn-primary" type="submit">
+        Сохранить
+       </button>
+      </form>
+     </section>
+     <section class="card">
+      <h2>
+       Пароль и сеансы
+      </h2>
+      <p class="muted">
+       После смены пароля остальные устройства выйдут из профиля.
+      </p>
+      <form action="#" class="form-grid" method="post" style="margin-top: 12px;">
+       <label class="field">
+        <span>
+         Текущий пароль
+        </span>
+        <input autocomplete="current-password" name="current_password" required="" type="password"/>
+       </label>
+       <label class="field">
+        <span>
+         Новый пароль
+        </span>
+        <input autocomplete="new-password" minlength="8" name="password" required="" type="password"/>
+       </label>
+       <label class="field">
+        <span>
+         Повторите пароль
+        </span>
+        <input autocomplete="new-password" minlength="8" name="repeat" required="" type="password"/>
+       </label>
+       <button class="btn btn-primary" type="submit">
+        Сменить пароль
+       </button>
+      </form>
+      <form action="#" method="post" style="margin-top: 12px;">
+       <button class="btn btn-ghost" type="submit">
+        Выйти на всех устройствах
+       </button>
+      </form>
+     </section>
+     <section class="card">
+      <h2>
+       Статус водителя
+      </h2>
+      <p>
+       Вы можете публиковать поездки.
+      </p>
+      <button class="btn btn-ghost" data-open-dialog="resign-dialog" type="button">
+       Отказаться от статуса водителя
+      </button>
+     </section>
+     <dialog class="along-dialog" id="resign-dialog">
+      <form action="#" class="stack" method="post">
+       <h2>
+        Отказ от статуса водителя
+       </h2>
+       <label class="field">
+        <span>
+         ФИО
+        </span>
+        <input maxlength="200" name="full_name" required="" value="Дина Каримова"/>
+       </label>
+       <label class="field">
+        <span>
+         Email
+        </span>
+        <input name="email" readonly="" value="user@along.local"/>
+       </label>
+       <label class="field">
+        <span>
+         Причина ухода
+        </span>
+        <textarea maxlength="1000" name="reason" required=""></textarea>
+       </label>
+       <button class="btn btn-primary" type="submit">
+        Отправить заявку
+       </button>
+       <button class="btn btn-ghost" data-close-dialog="" type="button">
+        Закрыть
+       </button>
+      </form>
+     </dialog>
+     <section class="card" id="my-trips">
+      <h2>
+       Мои поездки
+      </h2>
+      <p>
+       Вы ещё не создали поездку.
+       <a class="text-link" href="trip-new.html">
+        Создать поездку
+       </a>
+      </p>
+     </section>
+     <section class="card" id="my-bookings">
+      <h2>
+       Мои заявки
+      </h2>
+      <p style="margin-top: 8px;">
+       <a class="text-link" href="trip.html">
+        Москва → Минск
+       </a>
+       · уточнение
+      </p>
+     </section>
+     <section class="card">
+      <h2>
+       Предложения пассажиров
+      </h2>
+      <p class="muted">
+       Заявок пока нет.
+      </p>
+     </section>
+     <section class="card">
+      <h2>
+       Сохранённые маршруты
+      </h2>
+      <p class="muted">
+       Сохранённых маршрутов нет.
+      </p>
+     </section>
+     <section class="card">
+      <h2>
+       Мои обращения
+      </h2>
+      <p style="margin-top: 8px;">
+       В описании маршрут короче, чем дорога на карте. · на проверке
+      </p>
+     </section>
+     <section class="card">
+      <h2>
+       Удаление аккаунта
+      </h2>
+      <p class="muted">
+       Профиль и персональные данные удаляются без возможности восстановления. Будущие поездки и заявки отменяются, история обезличивается.
+      </p>
+      <button class="btn btn-ghost" data-open-dialog="delete-dialog" type="button">
+       Удалить аккаунт
+      </button>
+     </section>
+     <dialog class="along-dialog" id="delete-dialog">
+      <form action="#" class="stack" method="post">
+       <h2>
+        Удалить аккаунт
+       </h2>
+       <label class="field">
+        <span>
+         Пароль
+        </span>
+        <input autocomplete="current-password" name="password" required="" type="password"/>
+       </label>
+       <label class="field">
+        <span>
+         Введите слово УДАЛИТЬ
+        </span>
+        <input autocomplete="off" name="confirm" placeholder="УДАЛИТЬ" required=""/>
+       </label>
+       <button class="btn btn-primary" type="submit">
+        Удалить навсегда
+       </button>
+       <button class="btn btn-ghost" data-close-dialog="" type="button">
+        Отмена
+       </button>
+      </form>
+     </dialog>
+    </div>
+   </div>
+  </main>
+  <div aria-live="polite" class="toasts" id="toasts">
+  </div>
+  <footer class="site-footer">
+   <div class="container footer-grid">
+    <div class="footer-brand">
+     <a aria-label="ALONG" class="logo" href="index.html">
+      <span aria-hidden="true" class="logo-icon">
+       <img alt="" class="logo-img" src="assets/logo.png"/>
+      </span>
+      <span class="logo-word">
+       ALONG
+      </span>
+     </a>
+     <p>
+      ALONG — сервис поиска попутчиков по России и СНГ. Безопасные поездки, проверенные водители, удобный поиск.
+     </p>
+    </div>
+    <div class="footer-cols">
+     <nav aria-label="Разделы" class="footer-links">
+      <a href="index.html">
+       Главная
+      </a>
+      <a href="trips.html">
+       Поездки
+      </a>
+      <a href="schedule.html">
+       Расписание
+      </a>
+      <a href="support.html">
+       Поддержка
+      </a>
+     </nav>
+     <nav aria-label="Аккаунт" class="footer-links">
+      <a href="login.html">
+       Вход
+      </a>
+      <a href="register.html">
+       Регистрация
+      </a>
+      <a href="profile.html">
+       Кабинет
+      </a>
+     </nav>
+    </div>
+   </div>
+   <p class="copy">
+    © 2026 ALONG. Все права защищены.
+   </p>
+  </footer>
+ </body>
+</html>

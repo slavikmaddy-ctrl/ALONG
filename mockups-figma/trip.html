@@ -1,0 +1,294 @@
+﻿
+<!DOCTYPE html>
+<html lang="ru">
+ <head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1" name="viewport"/>
+  <title>
+   ALONG — Москва → Минск
+  </title>
+  <meta content="ALONG — сервис поиска попутчиков по России и СНГ: поездки между городами, расписание транспорта и проверенные водители." name="description"/>
+  <meta content="index, follow" name="robots"/>
+  <meta content="website" property="og:type"/>
+  <meta content="ALONG" property="og:site_name"/>
+  <meta content="ALONG — Москва → Минск" property="og:title"/>
+  <meta content="ALONG — сервис поиска попутчиков по России и СНГ: поездки между городами, расписание транспорта и проверенные водители." property="og:description"/>
+  <meta content="http://127.0.0.1:5058/trips/2" property="og:url"/>
+  <meta content="http://127.0.0.1:5058/static/logo.png" property="og:image"/>
+  <meta content="summary" name="twitter:card"/>
+  <meta content="ALONG — Москва → Минск" name="twitter:title"/>
+  <meta content="ALONG — сервис поиска попутчиков по России и СНГ: поездки между городами, расписание транспорта и проверенные водители." name="twitter:description"/>
+  <meta content="#12161c" name="theme-color"/>
+  <link href="assets/icon-192.png" rel="icon" type="image/png"/>
+  <link href="assets/apple-touch-icon.png" rel="apple-touch-icon"/>
+  <link href="https://fonts.googleapis.com" rel="preconnect"/>
+  <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+  <link href="styles.css" rel="stylesheet"/>
+  <link href="mockup.css" rel="stylesheet"/>
+  <link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet"/>
+ </head>
+ <body class="">
+  <a class="skip" href="#content">
+   К содержанию
+  </a>
+  <header class="site-header">
+   <a aria-label="ALONG" class="logo" href="index.html">
+    <span aria-hidden="true" class="logo-icon">
+     <img alt="" class="logo-img" src="assets/logo.png"/>
+    </span>
+    <span class="logo-word">
+     ALONG
+    </span>
+   </a>
+   <nav aria-label="Основное меню" class="site-nav" data-nav="" id="site-nav">
+    <a href="index.html">
+     Главная
+    </a>
+    <a aria-current="page" href="trips.html">
+     Поездки
+    </a>
+    <a href="schedule.html">
+     Расписание
+    </a>
+    <a href="#">
+     Сообщения
+    </a>
+    <a href="profile.html">
+     Кабинет
+    </a>
+    <form action="#" method="post">
+     <button class="nav-logout" type="submit">
+      Выйти
+     </button>
+    </form>
+   </nav>
+  </header>
+  <main class="page-enter" id="content">
+   <section class="page-hero page-hero--drive">
+    <div class="page-hero__copy">
+     <h1>
+      Москва → Минск
+     </h1>
+     <a class="glass-pill" href="#trip-detail">
+      О поездке
+     </a>
+    </div>
+   </section>
+   <div class="page" id="trip-detail">
+    <div class="container trip-layout">
+     <article class="card">
+      <p class="eyebrow">
+       20 ноября, 09:10
+      </p>
+      <div class="ride-top">
+       <p class="price">
+        1800 ₽
+       </p>
+      </div>
+      <p class="muted">
+       Цена за место. Свободно 3 из 3.
+      </p>
+      <p style="margin-top: 8px;">
+       <span class="badge badge-ok">
+        есть места
+       </span>
+      </p>
+      <img alt="Карта маршрута" class="trip-map" src="assets/map-trip.png"/>
+      <p class="scene-caption">
+       Посадка: метро «Белорусская». Высадка: Минск, вокзал.
+      </p>
+      <p style="margin-top: 10px;">
+       По трассе, остановка по просьбе в Смоленске.
+      </p>
+      <p class="muted">
+       Багаж: сумка
+      </p>
+     </article>
+     <aside class="card">
+      <div class="person">
+       <img alt="Елена Воронова" class="avatar" src="assets/images/elena.jpg"/>
+       <div>
+        <h2>
+         <a class="text-link" href="#">
+          Елена Воронова
+         </a>
+        </h2>
+        <p class="muted">
+         <span class="rating">
+          4.8
+         </span>
+         · 86 поездок
+        </p>
+        <p style="margin-top: 8px;">
+         <a class="text-link" href="#">
+          Написать
+         </a>
+        </p>
+       </div>
+      </div>
+      <p style="margin-top: 12px;">
+       Hyundai Solaris, белый
+      </p>
+      <p class="muted" style="margin-top: 8px;">
+       Езжу по трассе без лишних остановок.
+      </p>
+      <p class="muted" style="margin-top: 8px;">
+       Телефон откроется после подтверждения брони.
+      </p>
+     </aside>
+     <section class="card">
+      <h2>
+       Как подтверждается место
+      </h2>
+      <ol class="steps">
+       <li class="is-done">
+        <span class="step-index">
+         1
+        </span>
+        <span class="step-label">
+         Заявка
+        </span>
+       </li>
+       <li class="is-current">
+        <span class="step-index">
+         2
+        </span>
+        <span class="step-label">
+         Уточнение
+        </span>
+        <span class="step-note">
+         Сейчас
+        </span>
+       </li>
+       <li class="">
+        <span class="step-index">
+         3
+        </span>
+        <span class="step-label">
+         План
+        </span>
+       </li>
+       <li class="">
+        <span class="step-index">
+         4
+        </span>
+        <span class="step-label">
+         Подтверждение
+        </span>
+       </li>
+      </ol>
+      <form class="stack" method="post" style="margin-top: 12px;">
+       <input name="action" type="hidden" value="clarify"/>
+       <label class="field">
+        <span>
+         Телефон
+        </span>
+        <input aria-invalid="false" autocomplete="tel" inputmode="tel" name="phone" placeholder="+79000000000" required="" type="tel" value=""/>
+        <small>
+         Формат +7 и 10 цифр.
+        </small>
+       </label>
+       <label class="field">
+        <span>
+         Место встречи
+        </span>
+        <input maxlength="200" name="meeting" required="" value="метро «Белорусская»"/>
+       </label>
+       <label class="field">
+        <span>
+         Багаж
+        </span>
+        <input maxlength="200" name="luggage" placeholder="Например, рюкзак" value=""/>
+       </label>
+       <label class="field">
+        <span>
+         Комментарий
+        </span>
+        <textarea maxlength="500" name="comment"></textarea>
+       </label>
+       <button class="btn btn-primary" type="submit">
+        Сохранить уточнение
+       </button>
+      </form>
+      <form method="post" style="margin-top: 8px;">
+       <input name="action" type="hidden" value="cancel_booking"/>
+       <button class="btn btn-ghost" type="submit">
+        Отменить заявку
+       </button>
+      </form>
+     </section>
+     <section class="card">
+      <h2>
+       Пассажиры
+      </h2>
+      <p class="muted">
+       Имена пассажиров видны водителю и подтверждённым попутчикам.
+      </p>
+      <form class="stack" method="post" style="margin-top: 12px;">
+       <input name="action" type="hidden" value="complaint"/>
+       <label class="field">
+        <span>
+         Жалоба
+        </span>
+        <textarea maxlength="2000" name="body" required=""></textarea>
+       </label>
+       <button class="btn btn-ghost" type="submit">
+        Отправить жалобу
+       </button>
+      </form>
+     </section>
+    </div>
+   </div>
+  </main>
+  <div aria-live="polite" class="toasts" id="toasts">
+  </div>
+  <footer class="site-footer">
+   <div class="container footer-grid">
+    <div class="footer-brand">
+     <a aria-label="ALONG" class="logo" href="index.html">
+      <span aria-hidden="true" class="logo-icon">
+       <img alt="" class="logo-img" src="assets/logo.png"/>
+      </span>
+      <span class="logo-word">
+       ALONG
+      </span>
+     </a>
+     <p>
+      ALONG — сервис поиска попутчиков по России и СНГ. Безопасные поездки, проверенные водители, удобный поиск.
+     </p>
+    </div>
+    <div class="footer-cols">
+     <nav aria-label="Разделы" class="footer-links">
+      <a href="index.html">
+       Главная
+      </a>
+      <a href="trips.html">
+       Поездки
+      </a>
+      <a href="schedule.html">
+       Расписание
+      </a>
+      <a href="support.html">
+       Поддержка
+      </a>
+     </nav>
+     <nav aria-label="Аккаунт" class="footer-links">
+      <a href="login.html">
+       Вход
+      </a>
+      <a href="register.html">
+       Регистрация
+      </a>
+      <a href="profile.html">
+       Кабинет
+      </a>
+     </nav>
+    </div>
+   </div>
+   <p class="copy">
+    © 2026 ALONG. Все права защищены.
+   </p>
+  </footer>
+ </body>
+</html>
