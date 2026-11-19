@@ -26,6 +26,13 @@ def test_public_pages_open(client):
         assert response.status_code == 200, f"{path} -> {response.status_code}"
 
 
+def test_pages_have_no_bom(client):
+    for path in PUBLIC_PAGES:
+        html = client.get(path).get_data(as_text=True)
+        assert "\ufeff" not in html, f"BOM в HTML на {path}"
+        assert html.lstrip().startswith("<!DOCTYPE html>"), path
+
+
 def test_security_headers_everywhere(client):
     for path in ("/", "/trips", "/no-such-page"):
         response = client.get(path)

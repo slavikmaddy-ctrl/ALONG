@@ -3821,3 +3821,17 @@ body.is-admin .site-footer {
     height: 200px;
   }
 }
+
+/* ===== Кнопки в формах профиля и поддержки ===== */
+.form-grid > .btn {
+  justify-self: start;
+  align-self: center;
+  width: auto;
+  min-width: 200px;
+}
+
+@media (max-width: 700px) {
+  .form-grid > .btn {
+    width: 100%;
+  }
+}
