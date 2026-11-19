@@ -20,9 +20,10 @@ SeatMate/
 │  ├─ .secret              # секрет Flask, если не задан ALONG_SECRET_KEY
 │  ├─ templates/           # Jinja2-шаблоны (base.html, admin_base.html, …)
 │  └─ static/              # styles.css, site.js, home.js, logo.png,
-│                          # videos/hero-bg.mp4, images/*
+│                          # manifest.webmanifest, icons, videos/*, images/*
 ├─ scripts/
-│  └─ reset_demo.py        # ротация демо-паролей и чистка мусорных аккаунтов
+│  ├─ reset_demo.py        # ротация демо-паролей и чистка мусорных аккаунтов
+│  └─ refresh_demo.py      # сдвиг дат демо-поездок и рейсов на ближайшие дни
 ├─ tests/                  # pytest: conftest.py, test_app.py
 ├─ requirements.txt        # Flask, waitress
 ├─ requirements-dev.txt    # + pytest
@@ -43,6 +44,18 @@ python server.py            # http://127.0.0.1:5055, debug выключен
 Пароли демо-аккаунтов при создании базы генерируются случайно и один раз
 печатаются в консоль (или берутся из `ALONG_ADMIN_PASSWORD` /
 `ALONG_USER_PASSWORD`). Сохраните их и смените в рабочем окружении.
+
+Если демонстрационные поездки и рейсы «состарились», их даты можно сдвинуть
+на ближайшие дни. Скрипт сначала делает резервную копию базы, одну открытую
+поездку оставляет в прошлом для показа завершённых поездок:
+
+```powershell
+python scripts/refresh_demo.py --dry-run   # только показать изменения
+python scripts/refresh_demo.py             # сдвинуть и сохранить
+```
+
+Фоновое видео на главной — сжатая версия `hero-bg-720.mp4` (1280×720, около
+3,4 МБ); исходный `hero-bg.mp4` остаётся в проекте без изменений.
 
 ## Запуск в продакшене (Windows)
 

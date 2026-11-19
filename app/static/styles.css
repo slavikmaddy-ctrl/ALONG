@@ -3728,3 +3728,96 @@ body.is-admin .site-footer {
     grid-template-columns: repeat(5, minmax(0, 1fr));
   }
 }
+
+/* ===== Поездки: счётчик и сортировка ===== */
+.trip-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 16px;
+  margin: 0 0 12px;
+  padding: 0 4px;
+}
+
+.trip-count {
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--muted);
+}
+
+.trip-sort {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.trip-sort__link {
+  padding: 6px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.85rem;
+  text-decoration: none;
+}
+
+.trip-sort__link:hover {
+  border-color: rgba(255, 255, 255, 0.4);
+  color: #fff;
+}
+
+.trip-sort__link.is-on {
+  background: #fff;
+  border-color: #fff;
+  color: #16181c;
+}
+
+/* ===== Главная: контраст подписей в форме поиска ===== */
+.stage .search-form .field > span {
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 0.9rem;
+}
+
+.stage .search-form .field input::placeholder,
+.stage .search-form .field textarea::placeholder {
+  color: rgba(255, 255, 255, 0.68);
+}
+
+.stage .search-form small {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+/* ===== ВКР: контраст формы на главной и карта поездки ===== */
+.stage .search-form > .field > span {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.stage .search-form .field small {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.stage .search-form .field input::placeholder,
+.stage .search-form .field textarea::placeholder {
+  color: rgba(255, 255, 255, 0.68);
+}
+
+.trip-map {
+  height: 260px;
+  margin-top: 16px;
+  border: 1px solid var(--line);
+  background: #0f1319;
+}
+
+.scene-caption {
+  margin-top: 10px;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+@media (max-width: 700px) {
+  .trip-map {
+    height: 200px;
+  }
+}

@@ -1690,6 +1690,9 @@ def trips():
     origin = (request.args.get("from") or "").strip()
     dest = (request.args.get("to") or "").strip()
     kind = clean_kind(request.args.get("kind"))
+    sort = request.args.get("sort") or "time"
+    if sort not in ("time", "price"):
+        sort = "time"
     requested = (request.args.get("date") or "").strip()
     day, date_error = (None, None)
     if requested:
@@ -1765,6 +1768,10 @@ def trips():
         limit = int(price)
         rows = [row for row in rows if row["price"] <= limit]
         filtered = True
+    if sort == "price":
+        rows = sorted(rows, key=lambda row: (row["price"], row["depart_at"]))
+    else:
+        rows = sorted(rows, key=lambda row: row["depart_at"])
     failed = request.args.get("failed") == "1"
     route_ready = origin in CITY_BY_NAME and dest in CITY_BY_NAME and origin != dest
     show_offer = route_ready and not place_error and not date_error and not failed and not base_rows and not day
@@ -1787,6 +1794,11 @@ def trips():
     quote_args = {key: value for key, value in request.args.items()}
     quote_args["quote"] = "1"
     quote_link = url_for("trips", **quote_args)
+    sort_links = {}
+    for key in ("time", "price"):
+        params = request.args.to_dict()
+        params["sort"] = key
+        sort_links[key] = url_for("trips", **params)
     return render_template(
         "trips.html", rows=rows, origin=origin, dest=dest, kind=kind,
         date=date_value, seats=seats, price=price,
@@ -1795,6 +1807,7 @@ def trips():
         show_offer=show_offer, quote=quote, quote_km=quote_km,
         quote_cars=quote_cars or 0, quote_error=quote_error,
         quote_requested=quote_requested, quote_link=quote_link,
+        sort=sort, sort_links=sort_links, count=len(rows),
         rate=KIND_RATE.get(kind), cities=CITIES,
     )
 

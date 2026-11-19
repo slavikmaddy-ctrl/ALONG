@@ -80,7 +80,10 @@
       data: { type: "Feature", geometry: { type: "LineString", coordinates: [a, b] } }
     });
     map.addLayer({ id: "along-route", type: "line", source: "along-route", paint: { "line-color": "#ff9f12", "line-width": 4 } });
-    map.fitBounds([a, b], { padding: 48 });
+    map.fitBounds([
+      Math.min(a[0], b[0]), Math.min(a[1], b[1]),
+      Math.max(a[0], b[0]), Math.max(a[1], b[1])
+    ], { padding: 48 });
   });
 })();
 </script>

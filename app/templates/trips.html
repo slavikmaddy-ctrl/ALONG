@@ -110,6 +110,7 @@
         {% elif show_offer and not quote_requested %}
           <p class="muted">Выберите тип поездки, чтобы посчитать рекомендацию. Свою цену можно ввести вручную.</p>
         {% endif %}
+        {% if me %}
         <form class="filters" method="post" action="{{ url_for('create_offer') }}">
           <input type="hidden" name="csrf" value="{{ csrf }}">
           <input type="hidden" name="origin" value="{{ origin }}">
@@ -121,12 +122,23 @@
           </label>
           <button class="btn btn-primary" type="submit">Предложить</button>
         </form>
-        {% if not me %}
-          <p class="muted">Чтобы отправить цену, нужно войти. Кнопка откроет страницу входа.</p>
+        {% else %}
+        <p class="muted">Цену можно предложить только из аккаунта — так водитель видит, кто едет.</p>
+        <p><a class="btn btn-primary" href="{{ url_for('login', next=request.full_path) }}">Войти и предложить</a></p>
         {% endif %}
       </section>
     {% endif %}
     {% if rows %}
+    <div class="trip-toolbar">
+      <p class="trip-count">Найдено {{ count }}
+        {% set n10 = count % 10 %}{% set n100 = count % 100 %}
+        {% if n10 == 1 and n100 != 11 %}поездка{% elif n10 in [2, 3, 4] and n100 not in [12, 13, 14] %}поездки{% else %}поездок{% endif %}
+      </p>
+      <div class="trip-sort" role="group" aria-label="Сортировка поездок">
+        <a class="trip-sort__link {% if sort == 'time' %}is-on{% endif %}" href="{{ sort_links.time }}" {% if sort == 'time' %}aria-current="true"{% endif %}>Сначала ранние</a>
+        <a class="trip-sort__link {% if sort == 'price' %}is-on{% endif %}" href="{{ sort_links.price }}" {% if sort == 'price' %}aria-current="true"{% endif %}>Сначала дешёвые</a>
+      </div>
+    </div>
     <div class="trip-list">
       {% for trip in rows %}
       {% set badge, left, past = trip_meta(trip) %}

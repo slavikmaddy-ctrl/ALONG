@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% block title %}ALONG — {{ trip.origin }} → {{ trip.destination }}{% endblock %}
+{% block head_extra %}<link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet">{% endblock %}
 {% block main %}
 <section class="page-hero page-hero--drive">
   <div class="page-hero__copy">
@@ -16,10 +17,18 @@
       </div>
       <p class="muted">Цена за место. Свободно {{ left }} из {{ trip.seats_total }}.</p>
       <p style="margin-top: 8px;"><span class="badge {% if badge == 'почти заполнено' %}badge-lime{% elif badge == 'есть места' %}badge-ok{% else %}badge-muted{% endif %}">{% if trip.status == 'cancelled' %}Отменено водителем{% else %}{{ badge }}{% endif %}</span></p>
+      {% if trip.origin_lat is not none and trip.origin_lon is not none and trip.dest_lat is not none and trip.dest_lon is not none %}
+      <div id="trip-map" class="trip-map"
+           data-from-lon="{{ trip.origin_lon }}" data-from-lat="{{ trip.origin_lat }}"
+           data-to-lon="{{ trip.dest_lon }}" data-to-lat="{{ trip.dest_lat }}"
+           aria-label="Карта маршрута {{ trip.origin }} — {{ trip.destination }}"></div>
+      <p class="scene-caption">Посадка: {{ trip.pickup }}. Высадка: {{ trip.dropoff }}.</p>
+      {% else %}
       <figure class="scene">
         <img src="{{ url_for('media', name='road.jpg') }}" alt="Дорога днём">
         <figcaption>Посадка: {{ trip.pickup }}. Высадка: {{ trip.dropoff }}.</figcaption>
       </figure>
+      {% endif %}
       <p style="margin-top: 10px;">{{ trip.comment }}</p>
       {% if trip.luggage %}<p class="muted">Багаж: {{ trip.luggage }}</p>{% endif %}
     </article>
@@ -241,4 +250,42 @@
     </section>
   </div>
 </div>
+{% endblock %}
+{% block scripts %}
+{% if trip.origin_lat is not none and trip.origin_lon is not none and trip.dest_lat is not none and trip.dest_lon is not none %}
+<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+<script>
+(function () {
+  var box = document.getElementById("trip-map");
+  if (!box || !window.maplibregl) return;
+  var a = [parseFloat(box.dataset.fromLon), parseFloat(box.dataset.fromLat)];
+  var b = [parseFloat(box.dataset.toLon), parseFloat(box.dataset.toLat)];
+  if ([a[0], a[1], b[0], b[1]].some(function (n) { return isNaN(n); })) return;
+  var map = new maplibregl.Map({
+    container: box,
+    style: "https://tiles.openfreemap.org/styles/dark",
+    center: [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2],
+    zoom: 5,
+    attributionControl: false
+  });
+  map.addControl(new maplibregl.AttributionControl({ compact: true }));
+  map.on("load", function () {
+    [a, b].forEach(function (coord) {
+      var el = document.createElement("div");
+      el.className = "along-pin";
+      new maplibregl.Marker({ element: el }).setLngLat(coord).addTo(map);
+    });
+    map.addSource("trip-route", {
+      type: "geojson",
+      data: { type: "Feature", geometry: { type: "LineString", coordinates: [a, b] } }
+    });
+    map.addLayer({ id: "trip-route", type: "line", source: "trip-route", paint: { "line-color": "#ff9f12", "line-width": 4 } });
+    map.fitBounds([
+      Math.min(a[0], b[0]), Math.min(a[1], b[1]),
+      Math.max(a[0], b[0]), Math.max(a[1], b[1])
+    ], { padding: 44 });
+  });
+})();
+</script>
+{% endif %}
 {% endblock %}

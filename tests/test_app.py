@@ -38,9 +38,12 @@ def test_security_headers_everywhere(client):
 
 def test_static_deduplication(client):
     assert client.head("/static/videos/hero-bg.mp4").status_code == 200
+    assert client.head("/static/videos/hero-bg-720.mp4").status_code == 200
     assert client.get("/static/logo.png").status_code == 200
     assert client.get("/static/media/road.mp4").status_code == 404
     assert client.get("/static/images/logo.png").status_code == 404
+    assert client.get("/static/manifest.webmanifest").status_code == 200
+    assert client.get("/static/icon-192.png").status_code == 200
 
 
 def test_register_login_logout(app):
@@ -648,6 +651,23 @@ def test_trip_card_date_is_human_readable(client):
     spans = re.findall(r'class="when"><strong>[^<]+</strong><span>([^<]+)</span>', html)
     assert spans
     assert all(not re.fullmatch(r"\d{4}-\d{2}-\d{2}", value) for value in spans)
+
+
+def test_trips_count_has_space_before_word(client):
+    html = client.get("/trips").get_data(as_text=True)
+    assert re.search(r'class="trip-count">Найдено \d+\s+(поездка|поездки|поездок)', html)
+    assert not re.search(r"\d+поезд", html)
+
+
+def test_trips_sort_by_price_orders_rows(client):
+    html = client.get("/trips?sort=price").get_data(as_text=True)
+    assert 'class="trip-sort__link is-on"' in html
+    prices = [
+        int(re.sub(r"\D", "", value))
+        for value in re.findall(r'class="price">([\d\s\u00a0]+)', html)
+    ]
+    assert len(prices) >= 2
+    assert prices == sorted(prices)
 
 
 def test_footer_copyright_is_not_duplicated(client):
