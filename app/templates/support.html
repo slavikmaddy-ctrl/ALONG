@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}ALONG — Поддержка{% endblock %}
+{% block main %}
+<section class="page-hero page-hero--city">
+  <div class="page-hero__copy">
+    <h1>Поддержка</h1>
+    <a class="glass-pill" href="#support-form">Написать</a>
+  </div>
+</section>
+<div class="page"><div class="container stack">
+  <section class="card">
+    <p class="kicker">Связь</p>
+    <p class="lede">Поможем с бронью, поездкой, оплатой и данными профиля. Отвечаем на почту, обычно в течение рабочего дня.</p>
+    <p class="muted" style="margin-top: 10px;">Почта поддержки: <a class="text-link" href="mailto:{{ support_email }}">{{ support_email }}</a></p>
+  </section>
+  {% if sent %}
+  <section class="card">
+    <h2>Обращение отправлено</h2>
+    <p>Мы получили сообщение и ответим на указанную почту. Номер обращения не нужен: ответ придёт в той же переписке.</p>
+    <div class="empty-actions">
+      <a class="btn btn-primary" href="{{ url_for('trips') }}">Вернуться к поездкам</a>
+      <a class="btn btn-ghost" href="{{ url_for('support_page') }}">Отправить ещё одно</a>
+    </div>
+  </section>
+  {% else %}
+  <section class="card" id="support-form">
+    <h2>Написать в поддержку</h2>
+    {% if errors.form %}<p class="note-bad">{{ errors.form }}</p>{% endif %}
+    <form class="form-grid" method="post" style="margin-top: 12px;">
+      <input type="hidden" name="csrf" value="{{ csrf }}">
+      <label class="field {{ 'is-error' if errors.name else '' }}"><span>Имя</span>
+        <input name="name" value="{{ form.name }}" maxlength="200" autocomplete="name" required>
+        {% if errors.name %}<small>{{ errors.name }}</small>{% endif %}
+      </label>
+      <label class="field {{ 'is-error' if errors.email else '' }}"><span>Почта для ответа</span>
+        <input name="email" value="{{ form.email }}" type="email" autocomplete="email" required>
+        {% if errors.email %}<small>{{ errors.email }}</small>{% endif %}
+      </label>
+      <label class="field {{ 'is-error' if errors.topic else '' }}"><span>Тема</span>
+        <select name="topic" required>
+          <option value="">Выберите тему</option>
+          {% for topic in topics %}
+          <option value="{{ topic }}" {% if form.topic == topic %}selected{% endif %}>{{ topic }}</option>
+          {% endfor %}
+        </select>
+        {% if errors.topic %}<small>{{ errors.topic }}</small>{% endif %}
+      </label>
+      <label class="field is-wide {{ 'is-error' if errors.body else '' }}"><span>Что случилось</span>
+        <textarea name="body" maxlength="4000" rows="6" required>{{ form.body }}</textarea>
+        {% if errors.body %}<small>{{ errors.body }}</small>{% endif %}
+      </label>
+      <button class="btn btn-primary" type="submit">Отправить обращение</button>
+    </form>
+    <p class="muted" style="margin-top: 10px;">Не отправляйте пароль, коды из писем и данные банковской карты.</p>
+  </section>
+  {% endif %}
+  <section class="card">
+    <h2>Частые вопросы</h2>
+    <p style="margin-top: 10px;"><strong>Как отменить заявку?</strong> Откройте поездку в кабинете и нажмите «Отменить заявку». Если место уже подтверждено, оно вернётся в поиск.</p>
+    <p style="margin-top: 10px;"><strong>Почему поездка недоступна?</strong> Водитель мог её отменить, а администратор — скрыть. Причина видна участникам поездки.</p>
+    <p style="margin-top: 10px;"><strong>Как удалить профиль?</strong> В кабинете есть блок «Удаление аккаунта». Персональные данные стираются, история поездок обезличивается.</p>
+    <p style="margin-top: 10px;"><strong>Не пришло письмо?</strong> Проверьте «Спам» и запросите ссылку повторно на странице подтверждения почты.</p>
+  </section>
+</div></div>
+{% endblock %}

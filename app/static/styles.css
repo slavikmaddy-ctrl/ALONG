@@ -3721,3 +3721,10 @@ body.is-admin .site-footer {
     top: 86px;
   }
 }
+
+/* ===== Админка: пять плиток сводки в одну строку ===== */
+@media (min-width: 901px) {
+  body.is-admin .admin-stats {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+}

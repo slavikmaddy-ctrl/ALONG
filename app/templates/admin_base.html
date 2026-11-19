@@ -14,6 +14,7 @@
         <a href="{{ url_for('admin_users') }}" {% if request.endpoint in ['admin_users', 'admin_user'] %}aria-current="page"{% endif %}>Пользователи</a>
         <a href="{{ url_for('admin_messages') }}" {% if request.endpoint == 'admin_messages' %}aria-current="page"{% endif %}>Сообщения</a>
         <a href="{{ url_for('admin_complaints') }}" {% if request.endpoint == 'admin_complaints' %}aria-current="page"{% endif %}>Жалобы</a>
+        <a href="{{ url_for('admin_support') }}" {% if request.endpoint in ['admin_support', 'admin_support_ticket'] %}aria-current="page"{% endif %}>Поддержка</a>
         <a href="{{ url_for('admin_log') }}" {% if request.endpoint == 'admin_log' %}aria-current="page"{% endif %}>Журнал</a>
         <a href="{{ url_for('home') }}">На сайт</a>
       </nav>

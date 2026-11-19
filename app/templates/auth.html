@@ -26,6 +26,7 @@
           <button class="btn btn-primary" type="submit">Войти</button>
         </form>
         <p class="auth-switch"><a class="text-link" href="{{ url_for('password_forgot') }}">Забыли пароль?</a></p>
+        <p class="auth-switch">Не получается войти? <a class="text-link" href="{{ url_for('support_page') }}">Напишите в поддержку</a>.</p>
         <p class="auth-switch">Нет аккаунта? <a class="text-link" href="{{ url_for('register', next=nxt) if nxt else url_for('register') }}">Зарегистрироваться</a></p>
       {% else %}
         <form class="stack" method="post" action="{{ url_for('register') }}">

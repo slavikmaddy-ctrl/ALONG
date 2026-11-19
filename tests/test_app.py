@@ -772,3 +772,90 @@ def test_driver_sees_passenger_names(driver_client, db):
     db.commit()
     html = driver_client.get("/trips/%d" % trip["id"]).get_data(as_text=True)
     assert "Дина Каримова" in html
+
+
+def test_support_page_saves_ticket(client, db):
+    html = client.get("/support").get_data(as_text=True)
+    assert "Написать в поддержку" in html
+    token = get_csrf(client, "/support")
+    response = client.post(
+        "/support",
+        data={
+            "name": "Гость",
+            "email": "guest@example.com",
+            "topic": "Бронирование",
+            "body": "Не приходит подтверждение брони.",
+            "csrf": token,
+        },
+    )
+    assert response.status_code == 302
+    row = db.execute(
+        "SELECT * FROM support_tickets WHERE email = 'guest@example.com'"
+    ).fetchone()
+    assert row is not None
+    assert row["status"] == "open"
+    assert row["topic"] == "Бронирование"
+
+
+def test_support_page_validates_empty_message(client):
+    token = get_csrf(client, "/support")
+    html = client.post(
+        "/support",
+        data={"name": "", "email": "no-mail", "topic": "", "body": "коротко", "csrf": token},
+    ).get_data(as_text=True)
+    assert "Как к вам обращаться?" in html
+    assert "Выберите тему обращения" in html
+    assert "Опишите вопрос подробнее" in html
+
+
+def test_admin_closes_support_ticket(admin_client, db):
+    db.execute(
+        "INSERT INTO support_tickets (user_id, name, email, topic, body, status, staff_note, created_at) "
+        "VALUES (NULL, 'Гость', 'guest@example.com', 'Поездка', 'Проверка обращения', 'open', '', 1.0)"
+    )
+    db.commit()
+    ticket_id = db.execute("SELECT MAX(id) FROM support_tickets").fetchone()[0]
+    token = get_csrf(admin_client, "/admin/support")
+    response = admin_client.post(
+        "/admin/support/%d" % ticket_id,
+        data={"action": "close", "staff_note": "Ответили на почту", "csrf": token},
+    )
+    assert response.status_code == 302
+    row = db.execute(
+        "SELECT * FROM support_tickets WHERE id = ?", (ticket_id,)
+    ).fetchone()
+    assert row["status"] == "done"
+    assert row["staff_note"] == "Ответили на почту"
+    html = admin_client.get("/admin/log").get_data(as_text=True)
+    assert "закрытие обращения" in html
+
+
+def test_account_deletion_requires_password(user_client, db):
+    token = get_csrf(user_client, "/me")
+    user_client.post(
+        "/me/delete",
+        data={"password": "wrong-password", "confirm": "УДАЛИТЬ", "csrf": token},
+    )
+    row = db.execute("SELECT email FROM users WHERE email = ?", (USER[0],)).fetchone()
+    assert row is not None
+
+
+def test_account_deletion_strips_personal_data(user_client, db):
+    user = db.execute("SELECT * FROM users WHERE email = ?", (USER[0],)).fetchone()
+    token = get_csrf(user_client, "/me")
+    response = user_client.post(
+        "/me/delete",
+        data={"password": USER[1], "confirm": "УДАЛИТЬ", "csrf": token},
+    )
+    assert response.status_code == 302
+    row = db.execute("SELECT * FROM users WHERE id = ?", (user["id"],)).fetchone()
+    assert row["name"] == "Удалённый пользователь"
+    assert row["email"] == "deleted-%d@along.invalid" % user["id"]
+    assert row["status"] == "blocked"
+    assert row["phone"] is None
+    assert row["about"] is None
+    assert row["photo"] == "deleted.svg"
+    assert db.execute(
+        "SELECT COUNT(*) FROM sessions WHERE user_id = ?", (user["id"],)
+    ).fetchone()[0] == 0
+    assert user_client.get("/me").status_code == 302

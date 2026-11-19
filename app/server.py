@@ -36,6 +36,14 @@ SESSION_SECONDS = 60 * 60 * 8
 HERE = "Моё местоположение"
 EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 REVIEW_TEXT_LIMIT = 1000
+SUPPORT_EMAIL = (os.environ.get("ALONG_SUPPORT_EMAIL") or "support@along.local").strip()
+SUPPORT_TOPICS = (
+    "Бронирование",
+    "Поездка",
+    "Оплата",
+    "Аккаунт и данные",
+    "Другое",
+)
 STATUS_LABELS = {
     "clarify": "уточнение",
     "plan": "план",
@@ -697,6 +705,18 @@ def init_db():
             offer_price INTEGER NOT NULL,
             created_at TEXT NOT NULL
         );
+        CREATE TABLE IF NOT EXISTS support_tickets (
+            id INTEGER PRIMARY KEY,
+            user_id INTEGER REFERENCES users(id),
+            name TEXT NOT NULL,
+            email TEXT NOT NULL,
+            topic TEXT NOT NULL,
+            body TEXT NOT NULL,
+            status TEXT NOT NULL DEFAULT 'open'
+                CHECK(status IN ('open', 'done')),
+            staff_note TEXT,
+            created_at REAL NOT NULL
+        );
         """
     )
     migrate_token_hashes(con)
@@ -1225,6 +1245,8 @@ ADMIN_ACTION_LABELS = {
     "resignation-reject": "отклонение отказа от статуса",
     "complaint-close": "закрытие жалобы",
     "user-update": "изменение пользователя",
+    "support-close": "закрытие обращения",
+    "support-open": "возврат обращения",
 }
 
 ADMIN_ENTITY_LABELS = {
@@ -1233,6 +1255,7 @@ ADMIN_ENTITY_LABELS = {
     "schedule": "рейс",
     "review": "отзыв",
     "complaint": "жалоба",
+    "support": "обращение",
 }
 
 TRIP_STATUS_LABELS = {"open": "открыта", "hidden": "скрыта", "cancelled": "отменена"}
@@ -2546,6 +2569,67 @@ def save_route():
     return redirect(url_for("me_page"))
 
 
+@app.route("/support", methods=["GET", "POST"])
+def support_page():
+    errors = {}
+    form = {"name": "", "email": "", "topic": "", "body": ""}
+    me = current_user()
+    if me:
+        form["name"] = me["name"] or ""
+        form["email"] = me["email"] or ""
+    if request.method == "POST":
+        check_csrf()
+        form = {key: (request.form.get(key) or "").strip() for key in form}
+        if not form["name"]:
+            errors["name"] = "Как к вам обращаться?"
+        elif len(form["name"]) > 200:
+            errors["name"] = "Не больше 200 символов"
+        if not EMAIL_RE.match(form["email"]):
+            errors["email"] = "Напишите почту целиком, например name@example.com"
+        if form["topic"] not in SUPPORT_TOPICS:
+            errors["topic"] = "Выберите тему обращения"
+        if len(form["body"]) < 10:
+            errors["body"] = "Опишите вопрос подробнее"
+        elif len(form["body"]) > 4000:
+            errors["body"] = "Не больше 4000 символов"
+        if not errors and rate_limit(client_key("support"), 5, 3600):
+            errors["form"] = "Слишком много обращений. Попробуйте позже."
+        if not errors:
+            db().execute(
+                """
+                INSERT INTO support_tickets
+                (user_id, name, email, topic, body, status, staff_note, created_at)
+                VALUES (?, ?, ?, ?, ?, 'open', '', ?)
+                """,
+                (
+                    me["id"] if me else None,
+                    form["name"],
+                    form["email"],
+                    form["topic"],
+                    form["body"],
+                    now_ts(),
+                ),
+            )
+            db().commit()
+            if smtp_configured():
+                try:
+                    send_mail(
+                        SUPPORT_EMAIL,
+                        "ALONG: обращение — " + form["topic"],
+                        "От: {} <{}>\nТема: {}\n\n{}".format(
+                            form["name"], form["email"], form["topic"], form["body"]
+                        ),
+                    )
+                except Exception:
+                    pass
+            flash("Обращение отправлено. Ответим на почту.")
+            return redirect(url_for("support_page", sent=1))
+    return render_template(
+        "support.html", errors=errors, form=form, topics=SUPPORT_TOPICS,
+        support_email=SUPPORT_EMAIL, sent=request.args.get("sent") == "1",
+    )
+
+
 @app.route("/u/<int:user_id>")
 def public_profile(user_id):
     person = db().execute("SELECT * FROM users WHERE id = ?", (user_id,)).fetchone()
@@ -3033,6 +3117,71 @@ def logout_all():
     return response
 
 
+@app.route("/me/delete", methods=["POST"])
+@require_user()
+def delete_account():
+    check_csrf()
+    if g.me["role"] == "admin":
+        flash("Аккаунт администратора удалить нельзя.")
+        return redirect(url_for("me_page"))
+    password = request.form.get("password") or ""
+    confirm = (request.form.get("confirm") or "").strip().upper()
+    if confirm != "УДАЛИТЬ":
+        flash("Введите слово УДАЛИТЬ, чтобы подтвердить удаление.")
+        return redirect(url_for("me_page"))
+    user = db().execute("SELECT * FROM users WHERE id = ?", (g.me["id"],)).fetchone()
+    if not user or not check_password(password, user["password_hash"]):
+        flash("Пароль неверный. Аккаунт не удалён.")
+        return redirect(url_for("me_page"))
+    uid = user["id"]
+    con = db()
+    con.execute("BEGIN IMMEDIATE")
+    for row in con.execute(
+        "SELECT trip_id, seats FROM bookings WHERE passenger_id = ? AND status = 'confirmed'",
+        (uid,),
+    ).fetchall():
+        con.execute(
+            "UPDATE trips SET seats_taken = MAX(seats_taken - ?, 0) WHERE id = ? AND status = 'open'",
+            (row["seats"], row["trip_id"]),
+        )
+    con.execute(
+        "UPDATE bookings SET status = 'cancelled' "
+        "WHERE passenger_id = ? AND status NOT IN ('rejected', 'cancelled')",
+        (uid,),
+    )
+    con.execute(
+        "UPDATE trips SET status = 'cancelled', seats_taken = 0 "
+        "WHERE driver_id = ? AND status = 'open' AND depart_at >= ?",
+        (uid, datetime.now().strftime("%Y-%m-%dT%H:%M")),
+    )
+    con.execute(
+        "UPDATE bookings SET status = 'cancelled' "
+        "WHERE trip_id IN (SELECT id FROM trips WHERE driver_id = ?) "
+        "AND status NOT IN ('rejected', 'cancelled')",
+        (uid,),
+    )
+    con.execute("DELETE FROM sessions WHERE user_id = ?", (uid,))
+    con.execute("DELETE FROM saved_routes WHERE user_id = ?", (uid,))
+    con.execute("DELETE FROM custom_offers WHERE passenger_id = ?", (uid,))
+    con.execute("DELETE FROM login_attempts WHERE email = ?", ((user["email"] or "").lower(),))
+    con.execute(
+        """
+        UPDATE users SET name = 'Удалённый пользователь', email = ?,
+            password_hash = ?, city = NULL, phone = NULL, about = NULL, car = NULL,
+            photo = 'deleted.svg', status = 'blocked', driver_status = 'none',
+            verified = 0, verify_token = NULL, verify_sent = NULL
+        WHERE id = ?
+        """,
+        ("deleted-%d@along.invalid" % uid, hash_password(secrets.token_urlsafe(32)), uid),
+    )
+    con.commit()
+    session.clear()
+    flash("Аккаунт удалён. Персональные данные стёрты.")
+    response = redirect(url_for("home"))
+    response.delete_cookie("along_sid", httponly=True, samesite="Lax", secure=SECURE_COOKIES)
+    return response
+
+
 @app.route("/logout", methods=["POST"])
 def logout():
     check_csrf()
@@ -3054,6 +3203,7 @@ def admin_home():
         "clarify": db().execute("SELECT COUNT(*) AS n FROM bookings WHERE status = 'clarify'").fetchone()["n"],
         "users": db().execute("SELECT COUNT(*) AS n FROM users").fetchone()["n"],
         "complaints": db().execute("SELECT COUNT(*) AS n FROM complaints WHERE status = 'open'").fetchone()["n"],
+        "support": db().execute("SELECT COUNT(*) AS n FROM support_tickets WHERE status = 'open'").fetchone()["n"],
     }
     today = datetime.now().date()
     start_ts = datetime.combine(today - timedelta(days=6), datetime.min.time()).timestamp()
@@ -3444,6 +3594,68 @@ def admin_user(user_id):
                 flash("Пользователь обновлён.")
                 return redirect(url_for("admin_users"))
     return render_template("admin_user.html", person=person, errors=errors)
+
+
+@app.route("/admin/support")
+@require_admin
+def admin_support():
+    status = request.args.get("status") or ""
+    if status not in ("open", "done"):
+        status = ""
+    sql = """
+        SELECT s.*, u.name AS account_name
+        FROM support_tickets s
+        LEFT JOIN users u ON u.id = s.user_id
+        WHERE 1 = 1
+    """
+    args = []
+    if status:
+        sql += " AND s.status = ?"
+        args.append(status)
+    sql += " ORDER BY s.id DESC"
+    rows, page, pages, total = paginate_query(sql, args)
+    return render_template(
+        "admin_support.html", rows=rows, page=page, pages=pages, total=total,
+        status=status,
+    )
+
+
+@app.route("/admin/support/<int:ticket_id>", methods=["POST"])
+@require_admin
+def admin_support_ticket(ticket_id):
+    check_csrf()
+    item = db().execute(
+        "SELECT * FROM support_tickets WHERE id = ?", (ticket_id,)
+    ).fetchone()
+    if not item:
+        abort(404)
+    action = request.form.get("action") or ""
+    note = (request.form.get("staff_note") or "").strip()
+    if action == "close":
+        if not note:
+            flash("Напишите, что ответили пользователю.")
+            return redirect(url_for("admin_support", status="open"))
+        if len(note) > FIELD_LIMITS["staff_note"]:
+            flash("Пометка не длиннее 500 символов.")
+            return redirect(url_for("admin_support", status="open"))
+        db().execute(
+            "UPDATE support_tickets SET status = 'done', staff_note = ? "
+            "WHERE id = ? AND status = 'open'",
+            (note, ticket_id),
+        )
+        log_admin("support-close", "support", ticket_id, note)
+        flash("Обращение закрыто.")
+    elif action == "open":
+        db().execute(
+            "UPDATE support_tickets SET status = 'open' WHERE id = ?", (ticket_id,)
+        )
+        log_admin("support-open", "support", ticket_id, "")
+        flash("Обращение возвращено в работу.")
+    else:
+        abort(400)
+    db().commit()
+    status = request.form.get("status") or ""
+    return redirect(url_for("admin_support", status=status or None))
 
 
 @app.route("/admin/complaints")

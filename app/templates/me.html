@@ -142,6 +142,21 @@
         <p class="muted">Обращений нет.</p>
       {% endfor %}
     </section>
+    <section class="card">
+      <h2>Удаление аккаунта</h2>
+      <p class="muted">Профиль и персональные данные удаляются без возможности восстановления. Будущие поездки и заявки отменяются, история обезличивается.</p>
+      <button class="btn btn-ghost" type="button" data-open-dialog="delete-dialog">Удалить аккаунт</button>
+    </section>
+    <dialog id="delete-dialog" class="along-dialog">
+      <form class="stack" method="post" action="{{ url_for('delete_account') }}">
+        <h2>Удалить аккаунт</h2>
+        <input type="hidden" name="csrf" value="{{ csrf }}">
+        <label class="field"><span>Пароль</span><input name="password" type="password" autocomplete="current-password" required></label>
+        <label class="field"><span>Введите слово УДАЛИТЬ</span><input name="confirm" autocomplete="off" placeholder="УДАЛИТЬ" required></label>
+        <button class="btn btn-primary" type="submit">Удалить навсегда</button>
+        <button class="btn btn-ghost" type="button" data-close-dialog>Отмена</button>
+      </form>
+    </dialog>
   </div>
 </div>
 {% endblock %}
