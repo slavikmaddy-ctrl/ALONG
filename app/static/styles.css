@@ -3657,3 +3657,67 @@ body.is-admin .site-footer {
     grid-column: auto;
   }
 }
+
+/* ===== Десктоп: меню в шапке, нижняя «пилюля» только на мобильных ===== */
+@media (min-width: 901px) {
+  .site-header .site-nav,
+  .js .site-header .site-nav,
+  .js .site-header .site-nav.is-open {
+    top: 14px;
+    right: 18px;
+    bottom: auto;
+    left: auto;
+    transform: none;
+    flex-flow: row nowrap;
+    justify-content: flex-end;
+    gap: 2px;
+    max-width: calc(100vw - 230px);
+    padding: 7px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+  }
+
+  .site-header .site-nav::-webkit-scrollbar {
+    display: none;
+  }
+
+  .site-header .site-nav a,
+  .js .site-header .site-nav a,
+  .site-header .site-nav a:not(.btn) {
+    flex: 0 0 auto;
+    min-height: 40px;
+    padding: 8px 14px;
+    font-size: 0.95rem;
+  }
+
+  .site-header .site-nav form {
+    flex: 0 0 auto;
+  }
+
+  body:not(.is-home) main {
+    padding-bottom: 0;
+  }
+
+  body.is-home .stage {
+    padding-bottom: 64px;
+  }
+
+  .copy {
+    padding-bottom: 24px;
+  }
+
+  body.is-admin .admin-app {
+    padding-bottom: 48px;
+  }
+
+  body.is-admin .site-footer {
+    padding-bottom: 24px;
+  }
+
+  body.is-home .map-open,
+  body.is-home .map-close {
+    top: 86px;
+  }
+}
